@@ -99,4 +99,6 @@ ENV/
 
 # mypy
 .mypy_cache/
+
 .idea/
+!/zedenv/lib/
