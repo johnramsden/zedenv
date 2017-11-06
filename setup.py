@@ -1,8 +1,8 @@
-from setuptools import Command, setup
+from setuptools import setup, find_packages
 from os.path import abspath, dirname, join
 from subprocess import call
 
-from zedenv import __version__
+from zedenv.main import __version__
 
 def readme():
     with open('README.rst') as f:
@@ -20,20 +20,20 @@ setup(
     classifiers=[
       'Development Status :: 3 - Alpha',
       'License :: OSI Approved :: BSD License',
-      'Programming Language :: Python :: 3.6'
+      'Programming Language :: Python :: 3.6',
     ],
-    keywords = 'cli',
-    packages=['zedenv'],
+    keywords='cli',
+    packages=find_packages(exclude=["tests"]),
     install_requires=['click'],
     extras_require={
         'test': [
-            'coverage', 'pytest', 'pytest-cov'
+            'coverage', 'pytest', 'pytest-cov',
         ],
     },
     entry_points={
         'console_scripts': [
-            'zedenv=zedenv.main:cli',
-        ]
+            'zedenv=zedenv.main:cli'
+        ],
     },
-    zip_safe=False
+    zip_safe=False,
 )
