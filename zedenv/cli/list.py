@@ -5,13 +5,9 @@ import click
 
 @click.command(name="list",
                help="List all boot environments.")
-@click.option('--verbose',
+@click.option('--verbose', '-v',
               is_flag=True,
               help="Print verbose output.")
-@click.argument('bootenvironment')
-def cli(bootenvironment, verbose):
+def cli(boot_environment, verbose):
     if verbose:
         click.echo("Listing Boot Environments.")
-        
-    if bootenvironment:
-        click.echo(bootenvironment)

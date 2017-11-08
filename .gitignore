@@ -62,4 +62,4 @@ ENV/
 .idea/
 
 # Project files
-!/zedenv/lib/*.py
+!/zedenv/lib/**/*.py
