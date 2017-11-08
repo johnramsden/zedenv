@@ -16,8 +16,7 @@ import zedenv.lib.zfs as libzfs
 def cli(boot_environment, verbose, existing):
 
     # TODO: Get source dataset
-    source_snap = "zpool/ROOT/default@fakesnap"
-    src_properties = ["acltype=posixacls"]
+    created_snap = "zpool/ROOT/default-test-2017-09-17-192524@bez-be-snap-2017-09-17"
 
     if verbose:
         click.echo("Listing Boot Environments verbosely.")
@@ -26,8 +25,14 @@ def cli(boot_environment, verbose, existing):
 
     click.echo("Cloning...")
     if existing:
-        print("Using ", existing, " as source")
-        ZFS.clone(existing, boot_environment)
+        source_snap = existing
     else:
-        print("Using ", source_snap, " as source")
-        ZFS.clone(source_snap, boot_environment, properties=src_properties)
+        source_snap = created_snap
+
+    print("Using ", source_snap, " as source")
+    try:
+        ZFS.clone(source_snap, boot_environment)
+    except RuntimeError as rte:
+        click.echo("Failed to create {}".format(boot_environment))
+        if verbose:
+            click.echo("Error: {}".format(rte))

@@ -22,12 +22,11 @@ class ZFS:
 
         call_args.extend([snapshot, filesystem])
 
-        clone_show = ["zfs", "clone"] + call_args
+        clone_call = ["zfs", "clone"] + call_args
 
         """Make sure is snapshot"""
         try:
-            print(clone_show)
-            # subprocess.check_call(
-            #     ["zfs", "clone"].extend(call_args), stderr=subprocess.PIPE)
+            print("Cloning: ", clone_call)
+            subprocess.check_call(clone_call, stderr=subprocess.PIPE)
         except subprocess.CalledProcessError:
-            raise RuntimeError("Failed to create snapshot")
+            raise RuntimeError("Failed to create clone")
