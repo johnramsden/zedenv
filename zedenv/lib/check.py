@@ -12,9 +12,9 @@ class ZECheck:
             try:
                 root_dataset = self.system_zfs_root()
             except OSError as e:
-                sys.exit("ERROR: {}"
-                         "\nSystem must be booting off a ZFS root dataset\n"
-                         "to use boot environments".format(e))
+                sys.exit(f"ERROR: {e}\n"
+                         "System must be booting off a ZFS root dataset\n"
+                         "to use boot environments")
 
             print("System booting from ZFS dataset: ", root_dataset)
 

@@ -18,7 +18,7 @@ __version__ = '0.0.1'
 def print_version(ctx, param, value):
     if not value or ctx.resilient_parsing:
         return
-    click.echo('Version {}'.format(__version__))
+    click.echo(f"Version {__version__}")
     ctx.exit()
 
 
