@@ -24,10 +24,21 @@ def cli(boot_environment, verbose, existing):
 
     root_dataset = zedenv.lib.zfs.linux.mount_dataset("/")
 
-    zfs.get(root_dataset,
-            columns=["name", "property", "value"],
-            source=["local", "received"],
-            properties=["all"])
+    try:
+        properties = zfs.get(root_dataset,
+                             columns=["property", "value"],
+                             source=["local", "received"],
+                             properties=["all"])
+    except RuntimeError as e:
+        click.echo(f"Failed to get properties of '{root_dataset}'")
+
+
+    """
+    Take each line of output containing properties and convert
+    it to a list of property=value strings
+    """
+    property_list = ["=".join(line.split()) for line in properties.splitlines()]
+    print(property_list)
 
     click.echo("Cloning...")
     if existing:
@@ -49,6 +60,8 @@ def cli(boot_environment, verbose, existing):
     click.echo(f"Creating BE: {boot_environment_dataset}")
 
     try:
-        zfs.clone(source_snap, boot_environment_dataset)
+        zfs.clone(source_snap,
+                  boot_environment_dataset,
+                  properties=property_list)
     except RuntimeError as e:
         click.echo(f"Failed to create {boot_environment} from {source_snap}")
