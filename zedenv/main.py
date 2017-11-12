@@ -1,11 +1,10 @@
 """
 zedenv boot environment manager cli
 """
-
+import os
 import signal
 import subprocess
 import sys
-import os
 
 import click
 import zedenv
@@ -55,11 +54,11 @@ class ZECLI(click.MultiCommand):
               expose_value=False)
 def cli():
     """ZFS boot environment manager cli"""
-
     try:
         ze_check.ZECheck().startup_check()
     except RuntimeError as err:
-        exit(err)
+        click.echo(f"Startup check failed.")
+        sys.exit(err)
 
 
 if __name__ == '__main__':
