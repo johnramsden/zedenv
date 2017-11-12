@@ -24,6 +24,11 @@ def cli(boot_environment, verbose, existing):
 
     root_dataset = zedenv.lib.zfs.linux.mount_dataset("/")
 
+    zfs.get(root_dataset,
+            columns=["name", "property", "value"],
+            source=["local", "received"],
+            properties=["all"])
+
     click.echo("Cloning...")
     if existing:
         source_snap = existing
@@ -37,7 +42,13 @@ def cli(boot_environment, verbose, existing):
         source_snap = f"{root_dataset}@{snap_suffix}"
 
         click.echo(f"Using {source_snap} as source")
+
+    # Remove the final part of the data set after the last / and add new name
+    boot_environment_dataset = f"{root_dataset.rsplit('/', 1)[0]}/{boot_environment}"
+
+    click.echo(f"Creating BE: {boot_environment_dataset}")
+
     try:
-        zfs.clone(source_snap, boot_environment)
+        zfs.clone(source_snap, boot_environment_dataset)
     except RuntimeError as e:
         click.echo(f"Failed to create {boot_environment} from {source_snap}")
