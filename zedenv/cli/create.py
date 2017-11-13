@@ -5,6 +5,7 @@ import datetime
 import click
 import zedenv.lib.zfs.commands
 import zedenv.lib.zfs.linux
+import zedenv.lib.logger
 
 @click.command(name="create",
                help="Create a boot environment.")
@@ -17,51 +18,78 @@ import zedenv.lib.zfs.linux
 @click.argument('boot_environment')
 def cli(boot_environment, verbose, existing):
 
-    if verbose:
-        click.echo("Listing Boot Environments verbosely.")
+    logger = zedenv.lib.logger.ZELogger()
+    logger.verbose_log({
+        "level":   "INFO",
+        "message": "Creating Boot Environment:\n"
+    }, verbose)
 
     zfs = zedenv.lib.zfs.commands.ZFS()
-
     root_dataset = zedenv.lib.zfs.linux.mount_dataset("/")
+
+    logger.verbose_log({
+        "level":   "INFO",
+        "message": f"Getting properties of {root_dataset}.\n"
+    }, verbose)
 
     try:
         properties = zfs.get(root_dataset,
                              columns=["property", "value"],
                              source=["local", "received"],
                              properties=["all"])
-    except RuntimeError as e:
-        click.echo(f"Failed to get properties of '{root_dataset}'")
-
+    except RuntimeError:
+        logger.log({
+            "level": "EXCEPTION",
+            "message": f"Failed to get properties of '{root_dataset}'"
+        }, exit_on_error=True)
 
     """
     Take each line of output containing properties and convert
     it to a list of property=value strings
     """
     property_list = ["=".join(line.split()) for line in properties.splitlines()]
-    print(property_list)
+    if "canmount=off" not in property_list:
+        property_list.append("canmount=off")
 
-    click.echo("Cloning...")
+    # VERBOSE: Show all properties
+    logger.verbose_log({"level": "INFO","message": "PROPERTIES"}, verbose)
+    for p in property_list:
+        logger.verbose_log({"level": "INFO", "message": p}, verbose)
+    logger.verbose_log({"level": "INFO", "message": ""}, verbose)
+
     if existing:
         source_snap = existing
     else:
         snap_suffix = "zedenv-{}".format(datetime.datetime.now().isoformat())
         try:
             zfs.snapshot(root_dataset, snap_suffix)
-        except RuntimeError as e:
-            click.echo(f"Failed to create snapshot: '{root_dataset}@{snap_suffix}'")
+        except RuntimeError:
+            logger.log({
+                "level":   "EXCEPTION",
+                "message": f"Failed to create snapshot: '{root_dataset}@{snap_suffix}'"
+            }, exit_on_error=True)
 
         source_snap = f"{root_dataset}@{snap_suffix}"
 
-        click.echo(f"Using {source_snap} as source")
+    logger.verbose_log({
+        "level": "INFO",
+        "message": f"Using {source_snap} as source"
+    }, verbose)
 
     # Remove the final part of the data set after the last / and add new name
     boot_environment_dataset = f"{root_dataset.rsplit('/', 1)[0]}/{boot_environment}"
 
-    click.echo(f"Creating BE: {boot_environment_dataset}")
+    logger.verbose_log({
+        "level": "INFO",
+        "message": f"Creating Boot Environment: {boot_environment_dataset}"
+    }, verbose)
 
     try:
         zfs.clone(source_snap,
                   boot_environment_dataset,
                   properties=property_list)
-    except RuntimeError as e:
-        click.echo(f"Failed to create {boot_environment} from {source_snap}")
+    except RuntimeError:
+        logger.log({
+               "level":   "EXCEPTION",
+               "message": f"Failed to create {boot_environment} from {source_snap}"
+        }, exit_on_error=True)
