@@ -5,7 +5,7 @@ import datetime
 import click
 import zedenv.lib.zfs.commands
 import zedenv.lib.zfs.linux
-import zedenv.lib.logger
+from zedenv.lib.logger import ZELogger
 
 @click.command(name="create",
                help="Create a boot environment.")
@@ -18,8 +18,7 @@ import zedenv.lib.logger
 @click.argument('boot_environment')
 def cli(boot_environment, verbose, existing):
 
-    logger = zedenv.lib.logger.ZELogger()
-    logger.verbose_log({
+    ZELogger.verbose_log({
         "level":   "INFO",
         "message": "Creating Boot Environment:\n"
     }, verbose)
@@ -27,7 +26,7 @@ def cli(boot_environment, verbose, existing):
     zfs = zedenv.lib.zfs.commands.ZFS()
     root_dataset = zedenv.lib.zfs.linux.mount_dataset("/")
 
-    logger.verbose_log({
+    ZELogger.verbose_log({
         "level":   "INFO",
         "message": f"Getting properties of {root_dataset}.\n"
     }, verbose)
@@ -38,7 +37,7 @@ def cli(boot_environment, verbose, existing):
                              source=["local", "received"],
                              properties=["all"])
     except RuntimeError:
-        logger.log({
+        ZELogger.log({
             "level": "EXCEPTION",
             "message": f"Failed to get properties of '{root_dataset}'"
         }, exit_on_error=True)
@@ -52,10 +51,10 @@ def cli(boot_environment, verbose, existing):
         property_list.append("canmount=off")
 
     # VERBOSE: Show all properties
-    logger.verbose_log({"level": "INFO","message": "PROPERTIES"}, verbose)
+    ZELogger.verbose_log({"level": "INFO","message": "PROPERTIES"}, verbose)
     for p in property_list:
-        logger.verbose_log({"level": "INFO", "message": p}, verbose)
-    logger.verbose_log({"level": "INFO", "message": ""}, verbose)
+        ZELogger.verbose_log({"level": "INFO", "message": p}, verbose)
+    ZELogger.verbose_log({"level": "INFO", "message": ""}, verbose)
 
     if existing:
         source_snap = existing
@@ -64,14 +63,14 @@ def cli(boot_environment, verbose, existing):
         try:
             zfs.snapshot(root_dataset, snap_suffix)
         except RuntimeError:
-            logger.log({
+            ZELogger.log({
                 "level":   "EXCEPTION",
                 "message": f"Failed to create snapshot: '{root_dataset}@{snap_suffix}'"
             }, exit_on_error=True)
 
         source_snap = f"{root_dataset}@{snap_suffix}"
 
-    logger.verbose_log({
+    ZELogger.verbose_log({
         "level": "INFO",
         "message": f"Using {source_snap} as source"
     }, verbose)
@@ -79,7 +78,7 @@ def cli(boot_environment, verbose, existing):
     # Remove the final part of the data set after the last / and add new name
     boot_environment_dataset = f"{root_dataset.rsplit('/', 1)[0]}/{boot_environment}"
 
-    logger.verbose_log({
+    ZELogger.verbose_log({
         "level": "INFO",
         "message": f"Creating Boot Environment: {boot_environment_dataset}"
     }, verbose)
@@ -89,7 +88,7 @@ def cli(boot_environment, verbose, existing):
                   boot_environment_dataset,
                   properties=property_list)
     except RuntimeError:
-        logger.log({
+        ZELogger.log({
                "level":   "EXCEPTION",
                "message": f"Failed to create {boot_environment} from {source_snap}"
         }, exit_on_error=True)
