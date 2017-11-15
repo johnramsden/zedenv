@@ -11,6 +11,24 @@ import zedenv.lib.zfs.linux as zfs_linux
 from zedenv.lib.logger import ZELogger
 
 
+def get_clone_sources(root_dataset, existing) -> dict:
+
+    clone_sources = dict()
+
+    if existing:
+        if zfs_utility.is_snapshot(existing):
+            clone_sources['snapshot'] = existing
+            clone_sources['properties'] = zfs_utility.snapshot_parent_dataset(existing)
+        else:
+            clone_sources['snapshot'] = get_source_snapshot(existing)
+            clone_sources['properties'] = full_dataset_from_name(existing)
+    else:
+        clone_sources['snapshot'] = get_source_snapshot(zfs_utility.dataset_child_name(root_dataset))
+        clone_sources['properties'] = root_dataset
+
+    return clone_sources
+
+
 def get_boot_environment_root():
     return zfs_utility.dataset_parent(zfs_linux.mount_dataset("/"))
 
@@ -93,38 +111,29 @@ def cli(boot_environment, verbose, existing, test):
     }, verbose)
 
     # Getting snapshot for clone
-    if existing:
-        if zfs_utility.is_snapshot(existing):
-            source_snapshot = existing
-            property_source = zfs_utility.snapshot_parent_dataset(existing)
-        else:
-            source_snapshot = get_source_snapshot(existing)
-            property_source = full_dataset_from_name(existing)
-    else:
-        source_snapshot = get_source_snapshot(zfs_utility.dataset_child_name(root_dataset))
-        property_source = root_dataset
+    clone_sources = get_clone_sources(root_dataset, existing)
 
     # Remove the final part of the data set after the last / and add new name
     boot_environment_dataset = f"{parent_dataset}/{boot_environment}"
 
     ZELogger.verbose_log({
-        "level":   "INFO", "message": f"Getting properties of {property_source}.\n"
+        "level":   "INFO", "message": f"Getting properties of {clone_sources['properties']}.\n"
     }, verbose)
 
-    property_list = boot_env_properties(property_source)
+    property_list = boot_env_properties(clone_sources['properties'])
     show_source_properties(property_list, verbose)
 
     ZELogger.verbose_log({
-        "level": "INFO", "message": f"Using {source_snapshot} as source\n"
+        "level": "INFO", "message": f"Using {clone_sources['snapshot']} as source\n"
                                     f"Creating Boot Environment: {boot_environment_dataset}\n"
     }, verbose)
 
     try:
-        zfs_command.clone(source_snapshot,
+        zfs_command.clone(clone_sources['snapshot'],
                           boot_environment_dataset,
                           properties=property_list)
     except RuntimeError as e:
         ZELogger.log({
            "level":   "EXCEPTION",
-           "message": f"Failed to create {boot_environment_dataset} from {source_snapshot}"
+           "message": f"Failed to create {boot_environment_dataset} from {clone_sources['snapshot']}"
         }, exit_on_error=True)
