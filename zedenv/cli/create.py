@@ -23,7 +23,8 @@ def get_clone_sources(root_dataset, existing) -> dict:
             clone_sources['snapshot'] = get_source_snapshot(existing)
             clone_sources['properties'] = full_dataset_from_name(existing)
     else:
-        clone_sources['snapshot'] = get_source_snapshot(zfs_utility.dataset_child_name(root_dataset))
+        clone_sources['snapshot'] = get_source_snapshot(
+                                        zfs_utility.dataset_child_name(root_dataset))
         clone_sources['properties'] = root_dataset
 
     return clone_sources
@@ -38,6 +39,13 @@ def full_dataset_from_name(name):
 
 
 def get_source_snapshot(boot_environment_name, snap_prefix="zedenv"):
+
+    if "/" in boot_environment_name:
+        ZELogger.log({
+            "level":   "EXCEPTION",
+            "message": f"Failed to get snapshot.\n"
+                       f"Existing boot environment name {boot_environment_name} should not contain '/'"
+        }, exit_on_error=True)
 
     boot_environment_root = get_boot_environment_root()
 
