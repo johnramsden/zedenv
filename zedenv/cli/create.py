@@ -4,7 +4,7 @@ import datetime
 
 import click
 
-import zedenv.lib.zfs.command as zfs_command
+from zedenv.lib.zfs.command import ZFS
 import zedenv.lib.zfs.utility as zfs_utility
 import zedenv.lib.zfs.linux as zfs_linux
 
@@ -23,7 +23,7 @@ def get_clone_sources(root_dataset, existing) -> dict:
             clone_sources['properties'] = zfs_utility.snapshot_parent_dataset(existing)
         else:
             clone_sources['snapshot'] = get_source_snapshot(existing)
-            clone_sources['properties'] = be.full_dataset_from_name(existing)
+            clone_sources['properties'] = be.get_full_dataset(existing)
     else:
         clone_sources['snapshot'] = get_source_snapshot(
                                         zfs_utility.dataset_child_name(root_dataset))
@@ -50,7 +50,7 @@ def get_source_snapshot(boot_environment_name, snap_prefix="zedenv"):
         suffix=datetime.datetime.now().isoformat())
 
     try:
-        zfs_command.snapshot(dataset_name, snap_suffix)
+        ZFS.snapshot(dataset_name, snap_suffix)
     except RuntimeError:
         ZELogger.log({
             "level":   "EXCEPTION",
@@ -63,7 +63,7 @@ def get_source_snapshot(boot_environment_name, snap_prefix="zedenv"):
 def boot_env_properties(dataset):
 
     try:
-        properties = zfs_command.get(dataset,
+        properties = ZFS.get(dataset,
                              columns=["property", "value"],
                              source=["local", "received"],
                              properties=["all"])
@@ -132,9 +132,9 @@ def cli(boot_environment, verbose, existing, test):
     }, verbose)
 
     try:
-        zfs_command.clone(clone_sources['snapshot'],
-                          boot_environment_dataset,
-                          properties=property_list)
+        ZFS.clone(clone_sources['snapshot'],
+                  boot_environment_dataset,
+                  properties=property_list)
     except RuntimeError as e:
         ZELogger.log({
            "level":   "EXCEPTION",

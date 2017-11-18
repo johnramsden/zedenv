@@ -2,7 +2,7 @@
 
 import click
 
-import zedenv.lib.zfs.command as zfs_command
+from zedenv.lib.zfs.command import ZFS
 import zedenv.lib.zfs.utility as zfs_utility
 import zedenv.lib.zfs.linux as zfs_linux
 

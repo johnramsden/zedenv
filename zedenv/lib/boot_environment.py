@@ -13,8 +13,8 @@ def get_root():
     return zfs_utility.dataset_parent(zfs_linux.mount_dataset("/"))
 
 
-def full_dataset_from_name(name):
-    return f"{get_boot_environment_root()}/{name}"
+def get_full_dataset(name):
+    return f"{get_root()}/{name}"
 
 def list_boot_environments() -> list:
     """
