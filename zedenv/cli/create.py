@@ -8,6 +8,8 @@ import zedenv.lib.zfs.command as zfs_command
 import zedenv.lib.zfs.utility as zfs_utility
 import zedenv.lib.zfs.linux as zfs_linux
 
+import zedenv.lib.boot_environment as be
+
 from zedenv.lib.logger import ZELogger
 
 
@@ -21,21 +23,13 @@ def get_clone_sources(root_dataset, existing) -> dict:
             clone_sources['properties'] = zfs_utility.snapshot_parent_dataset(existing)
         else:
             clone_sources['snapshot'] = get_source_snapshot(existing)
-            clone_sources['properties'] = full_dataset_from_name(existing)
+            clone_sources['properties'] = be.full_dataset_from_name(existing)
     else:
         clone_sources['snapshot'] = get_source_snapshot(
                                         zfs_utility.dataset_child_name(root_dataset))
         clone_sources['properties'] = root_dataset
 
     return clone_sources
-
-
-def get_boot_environment_root():
-    return zfs_utility.dataset_parent(zfs_linux.mount_dataset("/"))
-
-
-def full_dataset_from_name(name):
-    return f"{get_boot_environment_root()}/{name}"
 
 
 def get_source_snapshot(boot_environment_name, snap_prefix="zedenv"):
@@ -47,7 +41,7 @@ def get_source_snapshot(boot_environment_name, snap_prefix="zedenv"):
                        f"Existing boot environment name {boot_environment_name} should not contain '/'"
         }, exit_on_error=True)
 
-    boot_environment_root = get_boot_environment_root()
+    boot_environment_root = be.get_root()
 
     dataset_name = f"{boot_environment_root}/{boot_environment_name}"
 
@@ -95,6 +89,7 @@ def show_source_properties(property_list, verbose):
         ZELogger.verbose_log({"level": "INFO", "message": p}, verbose)
     ZELogger.verbose_log({"level": "INFO", "message": ""}, verbose)
 
+
 @click.command(name="create",
                help="Create a boot environment.")
 @click.option('--verbose', '-v',
@@ -111,7 +106,7 @@ def cli(boot_environment, verbose, existing, test):
     if test:
         boot_environment = f"zedenv-{datetime.datetime.now().isoformat()}"
 
-    parent_dataset = get_boot_environment_root()
+    parent_dataset = be.get_root()
     root_dataset = zfs_linux.mount_dataset("/")
 
     ZELogger.verbose_log({
