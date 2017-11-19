@@ -11,6 +11,12 @@ import zedenv.lib.boot_environment as be
 from zedenv.lib.logger import ZELogger
 
 
+def configure_boot_environment_list() -> list:
+
+    list_output = be.list_boot_environments(be.get_root())
+
+    return list_output
+
 
 @click.command(name="list",
                help="List all boot environments.")
@@ -37,4 +43,7 @@ def cli(verbose, all, spaceused, scripting, snapshots):
     ZELogger.verbose_log({
         "level":   "INFO", "message": "Listing Boot Environments:\n"
     }, verbose)
+
+    for list_output in configure_boot_environment_list():
+        ZELogger.log({"level": "INFO", "message": list_output}, verbose)
 
