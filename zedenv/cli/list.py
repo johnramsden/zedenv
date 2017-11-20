@@ -12,10 +12,24 @@ from zedenv.lib.logger import ZELogger
 
 
 def configure_boot_environment_list() -> list:
+    boot_environments = be.list_boot_environments(be.get_root())
 
-    list_output = be.list_boot_environments(be.get_root())
+    formatted_boot_environments = list()
 
-    return list_output
+    for env in boot_environments:
+        if not zfs_utility.is_snapshot(env[0]):
+            boot_env = [zfs_utility.dataset_child_name(env[0])] + env[1:]
+            formatted_boot_environments.append(boot_env)
+
+
+            # fe = [zfs_utility.dataset_child_name(env[0])].extend(env[1:])
+            # formatted_boot_environments.append(fe)
+            # print(fe)
+
+    for fenv in formatted_boot_environments:
+        print("{: <20} {: <20} {: <20} {: <20} {: <20} {: <20} {: <20} {: <20}".format(*fenv))
+
+    return []
 
 
 @click.command(name="list",
@@ -44,6 +58,8 @@ def cli(verbose, all, spaceused, scripting, snapshots):
         "level":   "INFO", "message": "Listing Boot Environments:\n"
     }, verbose)
 
-    for list_output in configure_boot_environment_list():
-        ZELogger.log({"level": "INFO", "message": list_output}, verbose)
+    boot_environments = configure_boot_environment_list()
+
+    # for list_output in boot_environments:
+    #     ZELogger.log({"level": "INFO", "message": list_output}, verbose)
 

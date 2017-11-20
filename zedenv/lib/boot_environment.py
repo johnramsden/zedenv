@@ -55,8 +55,9 @@ def list_boot_environments(target) -> list:
     date_items = 5
     full_property_list = list()
     for line in split_property_list:
-        formatted_property_line = line[:len(line)-date_items]
-        formatted_property_line.append("-".join(line[-date_items:]))
-        full_property_list.append(formatted_property_line)
+        if line[0] != target:
+            formatted_property_line = line[:len(line)-date_items]         # Get all properties except date
+            formatted_property_line.append("-".join(line[-date_items:]))  # Add date converted to string
+            full_property_list.append(formatted_property_line)
 
     return full_property_list
