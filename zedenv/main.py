@@ -12,12 +12,11 @@ import zedenv.lib.check as ze_check
 
 signal.signal(signal.SIGINT, signal.default_int_handler)
 
-__version__ = '0.0.1'
 
 def print_version(ctx, param, value):
     if not value or ctx.resilient_parsing:
         return
-    click.echo(f"Version {__version__}")
+    click.echo(f"Version {zedenv.__version__}")
     ctx.exit()
 
 
@@ -55,7 +54,7 @@ class ZECLI(click.MultiCommand):
 def cli():
     """ZFS boot environment manager cli"""
     try:
-        ze_check.ZECheck().startup_check()
+        ze_check.startup_check()
     except RuntimeError as err:
         click.echo(f"Startup check failed.")
         sys.exit(err)
