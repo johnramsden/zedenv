@@ -1,0 +1,9 @@
+language: python
+python:
+  - "3.6"
+#script: python tests/test_all_of_the_units.py
+branches:
+  only:
+    - master
+install:
+  - python setup.py install
