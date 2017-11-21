@@ -2,7 +2,11 @@ from setuptools import setup, find_packages
 from os.path import abspath, dirname, join
 from subprocess import call
 
-from zedenv.main import __version__
+from zedenv import __version__
+
+tests_require = [
+    'coverage', 'pytest', 'pytest-cov', 'pytest-pep8', 'tox',
+]
 
 def readme():
     with open('README.rst') as f:
@@ -23,12 +27,11 @@ setup(
       'Programming Language :: Python :: 3.6',
     ],
     keywords='cli',
-    packages=find_packages(exclude=["tests"]),
+    packages=find_packages(),
     install_requires=['click'],
+    tests_require=tests_require,
     extras_require={
-        'test': [
-            'coverage', 'pytest', 'pytest-cov',
-        ],
+        'test': tests_require,
     },
     entry_points={
         'console_scripts': [
