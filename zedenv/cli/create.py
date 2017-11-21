@@ -95,18 +95,13 @@ def show_source_properties(property_list, verbose):
 @click.option('--verbose', '-v',
               is_flag=True,
               help="Print verbose output.")
-@click.option('--test', '-t',
-              is_flag=True,
-              help="Create test BE from date.")
 @click.option('--existing', '-e',
               help="Use existing boot environment as source.")
 @click.argument('boot_environment')
-def cli(boot_environment, verbose, existing, test):
-
-    if test:
-        boot_environment = f"zedenv-{datetime.datetime.now().isoformat()}"
+def cli(boot_environment, verbose, existing, test, setroot):
 
     parent_dataset = be.get_root()
+
     root_dataset = zfs_linux.mount_dataset("/")
 
     ZELogger.verbose_log({

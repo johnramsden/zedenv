@@ -29,6 +29,7 @@ setup(
     keywords='cli',
     packages=find_packages(),
     install_requires=['click'],
+    setup_requires=['pytest-runner'],
     tests_require=tests_require,
     extras_require={
         'test': tests_require,
