@@ -6,7 +6,6 @@ import pytest
 
 import zedenv.lib.check
 import zedenv.lib.zfs.utility as zfs_utility
-from zedenv.lib.zfs.command import ZFS
 
 import zedenv.cli.create
 
@@ -28,4 +27,4 @@ def test_boot_environment_created(root_dataset):
     zedenv.cli.create.zedenv_create(parent_dataset, root_dataset,
                                     boot_environment, verbose, existing)
 
-    assert zfs_utility.dataset_exists(f"{parent_dataset}/{boot_environment}") is True
+    assert zfs_utility.dataset_exists(f"{parent_dataset}/{boot_environment}")

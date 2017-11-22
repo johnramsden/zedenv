@@ -1,6 +1,5 @@
 """ZFS library"""
 
-import subprocess
 from zedenv.lib.zfs.command import ZFS
 
 """
