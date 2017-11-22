@@ -11,12 +11,9 @@ from zedenv.lib.logger import ZELogger
 import re
 from datetime import datetime
 
-def get_root():
-    return zfs_utility.dataset_parent(zfs_linux.mount_dataset("/"))
 
-
-def get_full_dataset(name):
-    return f"{get_root()}/{name}"
+def get_root(mount_dataset="/"):
+    return zfs_utility.dataset_parent(zfs_linux.mount_dataset(mount_dataset))
 
 
 def list_boot_environments(target) -> list:

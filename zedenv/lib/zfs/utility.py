@@ -1,6 +1,7 @@
 """ZFS library"""
 
 import subprocess
+from zedenv.lib.zfs.command import ZFS
 
 """
 ZFS helper functions
@@ -28,3 +29,11 @@ def snapshot_parent_dataset(dataset):
     return dataset.rsplit('@', 1)[-2]
 
 
+def dataset_exists(target):
+
+    try:
+        ZFS.list(target)
+    except RuntimeError:
+        return False
+
+    return True

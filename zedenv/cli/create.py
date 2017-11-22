@@ -15,6 +15,8 @@ from zedenv.lib.logger import ZELogger
 
 def get_clone_sources(root_dataset, existing) -> dict:
 
+    boot_environment_root = zfs_utility.dataset_parent(root_dataset)
+
     clone_sources = dict()
 
     if existing:
@@ -22,17 +24,18 @@ def get_clone_sources(root_dataset, existing) -> dict:
             clone_sources['snapshot'] = existing
             clone_sources['properties'] = zfs_utility.snapshot_parent_dataset(existing)
         else:
-            clone_sources['snapshot'] = get_source_snapshot(existing)
-            clone_sources['properties'] = be.get_full_dataset(existing)
+            clone_sources['snapshot'] = get_source_snapshot(existing, boot_environment_root)
+            clone_sources['properties'] = f"{boot_environment_root}/{existing}"
     else:
         clone_sources['snapshot'] = get_source_snapshot(
-                                        zfs_utility.dataset_child_name(root_dataset))
+                                        zfs_utility.dataset_child_name(root_dataset),
+                                        boot_environment_root)
         clone_sources['properties'] = root_dataset
 
     return clone_sources
 
 
-def get_source_snapshot(boot_environment_name, snap_prefix="zedenv"):
+def get_source_snapshot(boot_environment_name, boot_environment_root, snap_prefix="zedenv"):
 
     if "/" in boot_environment_name:
         ZELogger.log({
@@ -40,8 +43,6 @@ def get_source_snapshot(boot_environment_name, snap_prefix="zedenv"):
             "message": f"Failed to get snapshot.\n"
                        f"Existing boot environment name {boot_environment_name} should not contain '/'"
         }, exit_on_error=True)
-
-    boot_environment_root = be.get_root()
 
     dataset_name = f"{boot_environment_root}/{boot_environment_name}"
 
@@ -90,20 +91,7 @@ def show_source_properties(property_list, verbose):
     ZELogger.verbose_log({"level": "INFO", "message": ""}, verbose)
 
 
-@click.command(name="create",
-               help="Create a boot environment.")
-@click.option('--verbose', '-v',
-              is_flag=True,
-              help="Print verbose output.")
-@click.option('--existing', '-e',
-              help="Use existing boot environment as source.")
-@click.argument('boot_environment')
-def cli(boot_environment, verbose, existing, test, setroot):
-
-    parent_dataset = be.get_root()
-
-    root_dataset = zfs_linux.mount_dataset("/")
-
+def zedenv_create(parent_dataset, root_dataset, boot_environment, verbose, existing):
     ZELogger.verbose_log({
         "level":   "INFO", "message": "Creating Boot Environment:\n"
     }, verbose)
@@ -135,3 +123,19 @@ def cli(boot_environment, verbose, existing, test, setroot):
            "level":   "EXCEPTION",
            "message": f"Failed to create {boot_environment_dataset} from {clone_sources['snapshot']}"
         }, exit_on_error=True)
+
+@click.command(name="create",
+               help="Create a boot environment.")
+@click.option('--verbose', '-v',
+              is_flag=True,
+              help="Print verbose output.")
+@click.option('--existing', '-e',
+              help="Use existing boot environment as source.")
+@click.argument('boot_environment')
+def cli(boot_environment, verbose, existing):
+
+    parent_dataset = be.get_root()
+    root_dataset = zfs_linux.mount_dataset("/")
+
+    zedenv_create(parent_dataset, root_dataset,
+                  boot_environment, verbose, existing)

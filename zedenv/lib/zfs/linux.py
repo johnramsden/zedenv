@@ -12,7 +12,4 @@ def mount_dataset(mountpoint):
     else:
         root_dataset = mount.split(" ")[0]
 
-    # TODO: Hardcoded to testing dataset. Change
-    return "zpool/ROOT/default"
-
-    #return root_dataset
+    return root_dataset
