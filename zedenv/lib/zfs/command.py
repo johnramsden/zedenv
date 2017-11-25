@@ -24,10 +24,10 @@ class ZFS:
     """
 
     @classmethod
-    def snapshot(cls, filesystem, snapname, recursive=False, properties=None):
+    def clone(cls, snapname, filesystem, properties=None, create_parent=False):
 
-        if recursive:
-            call_args = ["-r"]
+        if create_parent:
+            call_args = ["-p"]
         else:
             call_args = []
 
@@ -39,14 +39,14 @@ class ZFS:
             call_args.extend(list(itertools.chain.from_iterable(prop_list)))
 
         """
-        Specify source filesystem and  snapshot name
+        Specify source snapshot and filesystem
         """
-        call_args.append(f"{filesystem}@{snapname}")
+        call_args.extend([snapname, filesystem])
 
         try:
-            cls._run("snapshot", call_args)
-        except subprocess.CalledProcessError:
-            raise RuntimeError(f"Failed to snapshot {filesystem}")
+            return cls._run("clone", call_args)
+        except subprocess.CalledProcessError as e:
+            raise RuntimeError(f"Failed to clone {filesystem}\n{e.output}")
 
     @classmethod
     def get(cls, target, recursive=False, depth=None, scripting=True,
@@ -97,31 +97,6 @@ class ZFS:
             raise RuntimeError(f"Failed to get zfs properties of {target}")
 
     @classmethod
-    def clone(cls, snapname, filesystem, properties=None, create_parent=False):
-
-        if create_parent:
-            call_args = ["-p"]
-        else:
-            call_args = []
-
-        """
-        Combine all arguments with properties
-        """
-        if properties is not None:
-            prop_list = [["-o", prop] for prop in properties]
-            call_args.extend(list(itertools.chain.from_iterable(prop_list)))
-
-        """
-        Specify source snapshot and filesystem
-        """
-        call_args.extend([snapname, filesystem])
-
-        try:
-            return cls._run("clone", call_args)
-        except subprocess.CalledProcessError as e:
-            raise RuntimeError(f"Failed to clone {filesystem}\n{e.output}")
-
-    @classmethod
     def list(cls, target, recursive=False, depth=None, scripting=True,
              parsable=False, columns: list = None, zfs_types: list = None,
              sort_properties_ascending: list = None, sort_properties_descending: list = None):
@@ -168,3 +143,29 @@ class ZFS:
             return cls._run("list", call_args)
         except subprocess.CalledProcessError:
             raise RuntimeError(f"Failed to get zfs list of {target}")
+
+    @classmethod
+    def snapshot(cls, filesystem, snapname, recursive=False, properties=None):
+
+        if recursive:
+            call_args = ["-r"]
+        else:
+            call_args = []
+
+        """
+        Combine all arguments with properties
+        """
+        if properties is not None:
+            prop_list = [["-o", prop] for prop in properties]
+            call_args.extend(list(itertools.chain.from_iterable(prop_list)))
+
+        """
+        Specify source filesystem and  snapshot name
+        """
+        call_args.append(f"{filesystem}@{snapname}")
+
+        try:
+            cls._run("snapshot", call_args)
+        except subprocess.CalledProcessError:
+            raise RuntimeError(f"Failed to snapshot {filesystem}")
+

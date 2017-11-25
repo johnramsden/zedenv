@@ -25,4 +25,4 @@ branches:
 install:
  - python setup.py install
 
-script: cd zedenv/tests && pytest --root-dataset="zpool/ROOT/default"
+script: pytest --root-dataset="zpool/ROOT/default"
