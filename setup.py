@@ -8,6 +8,7 @@ tests_require = [
     'coverage', 'pytest', 'pytest-cov', 'pytest-pep8', 'tox',
 ]
 
+
 def readme():
     with open('README.rst') as f:
         return f.read()

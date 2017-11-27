@@ -47,6 +47,7 @@ therefore root data set cannot be accessed directly inside a parameterize fixtur
 See: https://github.com/pytest-dev/pytest/issues/349 
 """
 
+
 @pytest.mark.parametrize(
     "snapname,properties,create_parent", [
         (f"zedenv-{datetime.datetime.now().isoformat()}", None, False),
@@ -54,9 +55,10 @@ See: https://github.com/pytest-dev/pytest/issues/349
         (f"zedenv-{datetime.datetime.now().isoformat()}", ["compression=off"], True),
         (f"zedenv-{datetime.datetime.now().isoformat()}", [], True),
         (f"zedenv-{datetime.datetime.now().isoformat()}", [], False),
-])
+    ])
 @require_root_dataset
 def test_zfs_clone_successful(root_dataset, snapname, properties, create_parent):
+    print(f"Creating {root_dataset}@{snapname}")
     """ Test will pass if clone successful"""
     ZFS.snapshot(root_dataset, snapname)
     ZFS.clone(f"{root_dataset}@{snapname}",
@@ -64,10 +66,18 @@ def test_zfs_clone_successful(root_dataset, snapname, properties, create_parent)
               properties=properties,
               create_parent=create_parent)
 
-@require_root_dataset
-def test_zfs_clone_fails(root_dataset):
-    with pytest.raises(RuntimeError):
-        ZFS.clone(f"{root_dataset}@fakesnap", "nonexistantdataset")
+# @pytest.mark.parametrize(
+#     "snapname,properties,create_parent", [
+#         (f"@zedenv-{datetime.datetime.now().isoformat()}", None, False),
+#         (f"", ["compression=off"], False),
+#         (f"zedenv-{datetime.datetime.now().isoformat()}", ["compression=off"], True),
+#         (f"zedenv-{datetime.datetime.now().isoformat()}", [], True),
+#         (f"zedenv-{datetime.datetime.now().isoformat()}", [], False),
+# ])
+# @require_root_dataset
+# def test_zfs_clone_fails(root_dataset):
+#     with pytest.raises(RuntimeError):
+#         ZFS.clone(f"{root_dataset}@fakesnap", "nonexistantdataset")
 
 
 # def test_zfs_get_fails():
