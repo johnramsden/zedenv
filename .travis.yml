@@ -6,23 +6,15 @@ python:
   - "3.6"
 
 before_install:
-  - sudo add-apt-repository -y ppa:zfs-native/stable
-  - sudo apt-get -q update
-  - sudo apt-get install -y linux-headers-$(uname -r)
-  - sudo apt-get -y install ubuntu-zfs
-  - sudo modprobe zfs
-  - sudo truncate -s 100M "${PWD}/disk.img"
-  - sudo zpool create zpool "${PWD}/disk.img"
-  - sudo zfs create -p -o mountpoint=legacy zpool/ROOT/default
-  - sudo mkdir -p /mnt/zedenv/root
-  - sudo mount -t zfs zpool/ROOT/default /mnt/zedenv/root
-  - sudo chmod u+s "$(which zfs)" "$(which zpool)"
+  - sudo scripts/travis/ubuntu-14_04/setup_zfs_requirements.sh
+  - sudo scripts/travis/common/create_test_root.sh
 
 branches:
   only:
-    - master
+    - /.*/ # Build all branches
 
 install:
  - python setup.py install
 
-script: pytest --root-dataset="zpool/ROOT/default"
+script:
+  - sudo env "PATH=$PATH" pytest tests --root-dataset="zpool/ROOT/default"
