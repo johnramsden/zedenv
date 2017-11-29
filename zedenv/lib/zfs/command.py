@@ -24,7 +24,10 @@ class ZFS:
     """
 
     @classmethod
-    def clone(cls, snapname, filesystem, properties=None, create_parent=False):
+    def clone(cls, snapname: str, filesystem: str, properties: list = None, create_parent=False):
+
+        if snapname is None:
+            raise TypeError("Snapshot name cannot be of type 'None'")
 
         if create_parent:
             call_args = ["-p"]
@@ -49,7 +52,7 @@ class ZFS:
             raise RuntimeError(f"Failed to clone {filesystem}\n{e.output}")
 
     @classmethod
-    def get(cls, target, recursive=False, depth=None, scripting=True,
+    def get(cls, target: str, recursive=False, depth=None, scripting=True,
             parsable=False, columns: list = None, zfs_types: list = None,
             source: list = None, properties: list = None):
         """
@@ -97,7 +100,7 @@ class ZFS:
             raise RuntimeError(f"Failed to get zfs properties of {target}")
 
     @classmethod
-    def list(cls, target, recursive=False, depth=None, scripting=True,
+    def list(cls, target: str, recursive=False, depth=None, scripting=True,
              parsable=False, columns: list = None, zfs_types: list = None,
              sort_properties_ascending: list = None, sort_properties_descending: list = None):
         """
@@ -145,7 +148,10 @@ class ZFS:
             raise RuntimeError(f"Failed to get zfs list of {target}")
 
     @classmethod
-    def snapshot(cls, filesystem, snapname, recursive=False, properties=None):
+    def snapshot(cls, filesystem: str, snapname: str, recursive=False, properties=None):
+
+        if snapname is None:
+            raise TypeError("Snapshot name cannot be of type 'None'")
 
         if recursive:
             call_args = ["-r"]
