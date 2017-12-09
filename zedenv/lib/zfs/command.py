@@ -52,7 +52,7 @@ class ZFS:
             raise RuntimeError(f"Failed to clone {filesystem}\n{e.output}")
 
     @classmethod
-    def get(cls, target: str, recursive=False, depth=None, scripting=True,
+    def get(cls, target: str, recursive=False, depth: int = None, scripting=True,
             parsable=False, columns: list = None, zfs_types: list = None,
             source: list = None, properties: list = None):
         """
@@ -67,7 +67,9 @@ class ZFS:
             call_args.append("-r")
 
         if depth is not None:
-            call_args.extend(["-d", depth])
+            if depth < 0:
+                raise RuntimeError("Depth cannot be negative")
+            call_args.extend(["-d", str(depth)])
 
         if scripting:
             call_args.append("-H")
@@ -75,22 +77,30 @@ class ZFS:
         if parsable:
             call_args.append("-p")
 
-        if columns is not None:
+        if columns:
             if "all" in columns:
                 call_args.extend(["-o", "all"])
             else:
                 call_args.extend(["-o", ",".join(columns)])
 
-        if zfs_types is not None:
+        if zfs_types:
             call_args.extend(["-t", ",".join(zfs_types)])
 
-        if source is not None:
+        if source:
             call_args.extend(["-s", ",".join(source)])
 
         if properties is None:
             call_args.append("all")
+        elif properties:
+            if "all" in properties:
+                if len(properties) < 2:
+                    call_args.append("all")
+                else:
+                    raise RuntimeError(f"Cannot use 'all' with other properties")
+            else:
+                call_args.extend([",".join(properties)])
         else:
-            call_args.append(",".join(properties))
+            raise RuntimeError(f"Cannot request no property type")
 
         call_args.append(target)
 
