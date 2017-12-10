@@ -1,7 +1,7 @@
 zedenv
 ======
 
-.. image:: https://travis-ci.com/johnramsden/zedenv.svg?token=4X1vWwTyHTHCUwBTudyN&branch=master
+.. image:: https://travis-ci.com/johnramsden/zedenv.svg?token=4X1vWwTyHTHCUwBTudyN&branch=release/v0.0.2
     :target: https://travis-ci.com/johnramsden/zedenv
 
 ZFS boot environment manager
