@@ -92,6 +92,21 @@ def show_source_properties(property_list, verbose):
 
 
 def zedenv_create(parent_dataset, root_dataset, boot_environment, verbose, existing):
+    """
+    :Parameters:
+      parent_dataset : str
+        Dataset boot environment root, commonly 'zpool/ROOT'.
+      root_dataset : str
+        Current oot dataset.
+      boot_environment : str
+        Name of new boot environment, e.g. default-02
+      verbose : bool
+        Print information verbosely.
+      existing : bool
+        Create boot environment from certain dataset.
+    :return:
+    """
+
     ZELogger.verbose_log({
         "level":   "INFO", "message": "Creating Boot Environment:\n"
     }, verbose)

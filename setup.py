@@ -5,7 +5,15 @@ from subprocess import call
 from zedenv import __version__
 
 tests_require = [
-    'coverage', 'pytest', 'pytest-cov', 'pytest-pep8', 'tox',
+    'coverage',
+    'pytest',
+    'pytest-cov',
+    'pytest-pep8',
+    'tox',
+]
+
+dev_require = [
+    'Sphinx'
 ]
 
 
@@ -34,6 +42,7 @@ setup(
     tests_require=tests_require,
     extras_require={
         'test': tests_require,
+        'dev': dev_require,
     },
     entry_points={
         'console_scripts': [
