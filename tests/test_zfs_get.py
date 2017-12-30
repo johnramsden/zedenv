@@ -33,11 +33,16 @@ require_root_dataset = pytest.mark.require_root_dataset
 @require_root_dataset
 def test_zfs_get_successful(root_dataset, recursive, depth, scripting,
                             parsable, columns, zfs_types, source, properties):
-    print(f"Running get on {root_dataset}")
     """ Test will pass if get successful"""
-    ZFS.get(root_dataset, recursive=recursive, depth=depth, scripting=scripting,
-            parsable=parsable, columns=columns, zfs_types=zfs_types,
-            source=source, properties=properties)
+    ZFS.get(root_dataset,
+            recursive=recursive,
+            depth=depth,
+            scripting=scripting,
+            parsable=parsable,
+            columns=columns,
+            zfs_types=zfs_types,
+            source=source,
+            properties=properties)
 
 # Incorrect options to test
 @pytest.mark.parametrize(
@@ -64,8 +69,14 @@ def test_zfs_get_successful(root_dataset, recursive, depth, scripting,
 @require_root_dataset
 def test_zfs_get_fails(root_dataset, recursive, depth, scripting,
                        parsable, columns, zfs_types, source, properties):
-
+    """ Test will fail if get unsuccessful"""
     with pytest.raises(RuntimeError):
-        ZFS.get(root_dataset, recursive=recursive, depth=depth, scripting=scripting,
-                parsable=parsable, columns=columns, zfs_types=zfs_types,
-                source=source, properties=properties)
+        ZFS.get(root_dataset,
+                recursive=recursive,
+                depth=depth,
+                scripting=scripting,
+                parsable=parsable,
+                columns=columns,
+                zfs_types=zfs_types,
+                source=source,
+                properties=properties)

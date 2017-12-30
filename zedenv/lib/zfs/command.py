@@ -110,7 +110,7 @@ class ZFS:
             raise RuntimeError(f"Failed to get zfs properties of {target}")
 
     @classmethod
-    def list(cls, target: str, recursive=False, depth=None, scripting=True,
+    def list(cls, target: str, recursive=False, depth: int = None, scripting=True,
              parsable=False, columns: list = None, zfs_types: list = None,
              sort_properties_ascending: list = None, sort_properties_descending: list = None):
         """
@@ -125,7 +125,9 @@ class ZFS:
             call_args.append("-r")
 
         if depth is not None:
-            call_args.extend(["-d", depth])
+            if depth < 0:
+                raise RuntimeError("Depth cannot be negative")
+            call_args.extend(["-d", str(depth)])
 
         if scripting:
             call_args.append("-H")
@@ -133,13 +135,13 @@ class ZFS:
         if parsable:
             call_args.append("-p")
 
-        if columns is not None:
+        if columns:
             if "all" in columns:
                 call_args.extend(["-o", "all"])
             else:
                 call_args.extend(["-o", ",".join(columns)])
 
-        if zfs_types is not None:
+        if zfs_types:
             call_args.extend(["-t", ",".join(zfs_types)])
 
         if sort_properties_ascending is not None:
