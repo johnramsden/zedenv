@@ -6,6 +6,21 @@ import subprocess
 
 class ZFS:
     @staticmethod
+    def argcheck_depth(call_args, depth):
+        if depth is not None:
+            if depth < 0:
+                raise RuntimeError("Depth cannot be negative")
+            call_args.extend(["-d", str(depth)])
+
+    @staticmethod
+    def argcheck_columns(call_args, columns):
+        if columns:
+            if "all" in columns:
+                call_args.extend(["-o", "all"])
+            else:
+                call_args.extend(["-o", ",".join(columns)])
+
+    @staticmethod
     def _run(command, arguments):
 
         zfs_call = ["zfs", command] + arguments
@@ -66,10 +81,7 @@ class ZFS:
         if recursive:
             call_args.append("-r")
 
-        if depth is not None:
-            if depth < 0:
-                raise RuntimeError("Depth cannot be negative")
-            call_args.extend(["-d", str(depth)])
+        cls.argcheck_depth(call_args, depth)
 
         if scripting:
             call_args.append("-H")
@@ -77,11 +89,7 @@ class ZFS:
         if parsable:
             call_args.append("-p")
 
-        if columns:
-            if "all" in columns:
-                call_args.extend(["-o", "all"])
-            else:
-                call_args.extend(["-o", ",".join(columns)])
+        cls.argcheck_columns(call_args, columns)
 
         if zfs_types:
             call_args.extend(["-t", ",".join(zfs_types)])
@@ -124,10 +132,7 @@ class ZFS:
         if recursive:
             call_args.append("-r")
 
-        if depth is not None:
-            if depth < 0:
-                raise RuntimeError("Depth cannot be negative")
-            call_args.extend(["-d", str(depth)])
+        cls.argcheck_depth(call_args, depth)
 
         if scripting:
             call_args.append("-H")
@@ -135,11 +140,7 @@ class ZFS:
         if parsable:
             call_args.append("-p")
 
-        if columns:
-            if "all" in columns:
-                call_args.extend(["-o", "all"])
-            else:
-                call_args.extend(["-o", ",".join(columns)])
+        cls.argcheck_columns(call_args, columns)
 
         if zfs_types:
             call_args.extend(["-t", ",".join(zfs_types)])
