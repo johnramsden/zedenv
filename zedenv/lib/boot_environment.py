@@ -11,8 +11,17 @@ from zedenv.lib.logger import ZELogger
 import re
 from datetime import datetime
 
+# TODO: Write function to get size
+def size(boot_environment) -> int:
+    # Space calculation:
+    # https://github.com/vermaden/beadm/blob/
+    # 60f8d4de7b0a0a59360f631816d36cfefcc86b75/beadm#L389-L421
+    be_size = 1
 
-def get_root(mount_dataset="/"):
+    return be_size
+
+
+def root(mount_dataset="/"):
     return zfs_utility.dataset_parent(zfs_linux.mount_dataset(mount_dataset))
 
 

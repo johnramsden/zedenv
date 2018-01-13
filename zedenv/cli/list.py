@@ -21,15 +21,11 @@ def configure_boot_environment_list() -> list:
             boot_env = [zfs_utility.dataset_child_name(env[0])] + env[1:]
             formatted_boot_environments.append(boot_env)
 
-
-            # fe = [zfs_utility.dataset_child_name(env[0])].extend(env[1:])
-            # formatted_boot_environments.append(fe)
-            # print(fe)
-
     for fenv in formatted_boot_environments:
+        # set the columns to a minimum of 20 characters and align text to right.
         print("{: <20} {: <20} {: <20} {: <20} {: <20} {: <20} {: <20} {: <20}".format(*fenv))
 
-    return []
+    return formatted_boot_environments
 
 
 @click.command(name="list",
@@ -60,6 +56,8 @@ def cli(verbose, all, spaceused, scripting, snapshots):
 
     boot_environments = configure_boot_environment_list()
 
-    # for list_output in boot_environments:
-    #     ZELogger.log({"level": "INFO", "message": list_output}, verbose)
+    # Headers:
+    # BE              Active Mountpoint  Space Created
+    for list_output in boot_environments:
+        ZELogger.log({"level": "INFO", "message": list_output}, verbose)
 

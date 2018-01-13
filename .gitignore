@@ -63,3 +63,4 @@ ENV/
 
 # IDE files
 .idea/
+.vscode/
