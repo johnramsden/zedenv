@@ -10,10 +10,12 @@ require_root_dataset = pytest.mark.require_root_dataset
 
 
 def create_clone(root_dataset, snapname, properties: list=None, create_parent=False):
+    clone_root = zfs_utility.dataset_parent(root_dataset)
+    clone_suffix = f"zedenv-{datetime.datetime.now().isoformat()}"
     try:
         ZFS.snapshot(root_dataset, snapname)
         ZFS.clone(f"{root_dataset}@{snapname}",
-                  f"{zfs_utility.dataset_parent(root_dataset)}/zedenv-{datetime.datetime.now().isoformat()}",
+                  f"{clone_root}/{clone_suffix}",
                   properties=properties,
                   create_parent=create_parent)
     except (RuntimeError, TypeError):

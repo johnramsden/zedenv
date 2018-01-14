@@ -42,6 +42,7 @@ def test_zfs_list_successful(root_dataset, recursive, depth, scripting, parsable
              sort_properties_ascending=sort_properties_ascending,
              sort_properties_descending=sort_properties_descending)
 
+
 # Incorrect options to test
 @pytest.mark.parametrize(
     "columns,zfs_types,sort_properties_ascending,sort_properties_descending", [

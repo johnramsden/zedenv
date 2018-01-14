@@ -69,15 +69,15 @@ def test_is_not_clone_invalid_option(clonename):
 
 @require_root_dataset
 def test_is_clone(root_dataset):
+    clone_root = zfs_utility.dataset_parent(root_dataset)
+
     snapname = f"zedenv-{datetime.datetime.now().isoformat()}"
     ZFS.snapshot(root_dataset, snapname)
 
-    clonename = f"{zfs_utility.dataset_parent(root_dataset)}/zedenv-{datetime.datetime.now().isoformat()}"
-    ZFS.clone(f"{root_dataset}@{snapname}", clonename)
+    clone_name = f"{clone_root}/zedenv-{datetime.datetime.now().isoformat()}"
+    ZFS.clone(f"{root_dataset}@{snapname}", clone_name)
 
-    print(clonename)
-
-    assert zfs_utility.is_clone(clonename)
+    assert zfs_utility.is_clone(clone_name)
 
 
 """
@@ -86,7 +86,8 @@ Tests for function: zedenv.lib.zfs.utility.dataset_parent()
 
 
 def test_dataset_parent():
-    assert zfs_utility.dataset_parent(test_dataset_names['root']) == test_dataset_names['boot_environment_root']
+    assert zfs_utility.dataset_parent(
+        test_dataset_names['root']) == test_dataset_names['boot_environment_root']
 
 
 """
@@ -95,7 +96,8 @@ Tests for function: zedenv.lib.zfs.utility.dataset_child_name()
 
 
 def test_dataset_child_name():
-    assert zfs_utility.dataset_child_name(test_dataset_names['root']) == test_dataset_names['boot_environment']
+    assert zfs_utility.dataset_child_name(
+        test_dataset_names['root']) == test_dataset_names['boot_environment']
 
 
 """
@@ -104,4 +106,5 @@ Tests for function: zedenv.lib.zfs.utility.parent_dataset()
 
 
 def test_snapshot_parent_dataset():
-    assert zfs_utility.snapshot_parent_dataset(f"{test_dataset_names['root']}@my-snap") == test_dataset_names['root']
+    assert zfs_utility.snapshot_parent_dataset(
+        f"{test_dataset_names['root']}@my-snap") == test_dataset_names['root']

@@ -60,4 +60,3 @@ def cli(verbose, all, spaceused, scripting, snapshots):
     # BE              Active Mountpoint  Space Created
     for list_output in boot_environments:
         ZELogger.log({"level": "INFO", "message": list_output}, verbose)
-

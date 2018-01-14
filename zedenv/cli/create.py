@@ -40,8 +40,9 @@ def get_source_snapshot(boot_environment_name, boot_environment_root, snap_prefi
     if "/" in boot_environment_name:
         ZELogger.log({
             "level":   "EXCEPTION",
-            "message": f"Failed to get snapshot.\n"
-                       f"Existing boot environment name {boot_environment_name} should not contain '/'"
+            "message": ("Failed to get snapshot.\n",
+                        "Existing boot environment name ",
+                        f"{boot_environment_name} should not contain '/'")
         }, exit_on_error=True)
 
     dataset_name = f"{boot_environment_root}/{boot_environment_name}"
@@ -97,7 +98,7 @@ def zedenv_create(parent_dataset, root_dataset, boot_environment, verbose, exist
       parent_dataset : str
         Dataset boot environment root, commonly 'zpool/ROOT'.
       root_dataset : str
-        Current oot dataset.
+        Current boot dataset.
       boot_environment : str
         Name of new boot environment, e.g. default-02
       verbose : bool
@@ -125,8 +126,9 @@ def zedenv_create(parent_dataset, root_dataset, boot_environment, verbose, exist
     show_source_properties(property_list, verbose)
 
     ZELogger.verbose_log({
-        "level": "INFO", "message": f"Using {clone_sources['snapshot']} as source\n"
-                                    f"Creating Boot Environment: {boot_environment_dataset}\n"
+        "level": "INFO",
+        "message": f"Using {clone_sources['snapshot']} as source\n"
+                   f"Creating Boot Environment: {boot_environment_dataset}\n"
     }, verbose)
 
     try:
@@ -136,8 +138,10 @@ def zedenv_create(parent_dataset, root_dataset, boot_environment, verbose, exist
     except RuntimeError as e:
         ZELogger.log({
            "level":   "EXCEPTION",
-           "message": f"Failed to create {boot_environment_dataset} from {clone_sources['snapshot']}"
+           "message": (f"Failed to create {boot_environment_dataset}",
+                       f" from {clone_sources['snapshot']}")
         }, exit_on_error=True)
+
 
 @click.command(name="create",
                help="Create a boot environment.")

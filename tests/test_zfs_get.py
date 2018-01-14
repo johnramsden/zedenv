@@ -44,6 +44,7 @@ def test_zfs_get_successful(root_dataset, recursive, depth, scripting,
             source=source,
             properties=properties)
 
+
 # Incorrect options to test
 @pytest.mark.parametrize(
     "columns,zfs_types,source,properties", [

@@ -164,6 +164,3 @@ texinfo_documents = [
      author, 'zedenv', 'One line description of project.',
      'Miscellaneous'),
 ]
-
-
-

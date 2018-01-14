@@ -187,4 +187,3 @@ class ZFS:
             cls._run("snapshot", call_args)
         except subprocess.CalledProcessError:
             raise RuntimeError(f"Failed to snapshot {filesystem}")
-

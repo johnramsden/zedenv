@@ -11,6 +11,7 @@ from zedenv.lib.logger import ZELogger
 import re
 from datetime import datetime
 
+
 # TODO: Write function to get size
 def size(boot_environment) -> int:
     # Space calculation:
@@ -62,8 +63,11 @@ def list_boot_environments(target) -> list:
     full_property_list = list()
     for line in split_property_list:
         if line[0] != target:
-            formatted_property_line = line[:len(line)-date_items]         # Get all properties except date
-            formatted_property_line.append("-".join(line[-date_items:]))  # Add date converted to string
+            # Get all properties except date
+            formatted_property_line = line[:len(line)-date_items]
+
+            # Add date converted to string
+            formatted_property_line.append("-".join(line[-date_items:]))
             full_property_list.append(formatted_property_line)
 
     return full_property_list

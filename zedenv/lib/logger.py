@@ -69,7 +69,6 @@ class ZELogger:
             "message": message
         }, exit_on_error)
 
-
     @classmethod
     def verbose_log(cls, content, verbose_logs, exit_on_error=False):
         if verbose_logs:

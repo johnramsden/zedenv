@@ -19,6 +19,7 @@ branches:
 
 install:
   - python setup.py install
+  - pip install '.[test]'
 
 script:
-  - sudo env "PATH=$PATH" pytest tests --root-dataset="zpool/ROOT/default"
+  - sudo env "PATH=$PATH" pytest --pep8 --cov=zedenv tests --root-dataset="zpool/ROOT/default"
