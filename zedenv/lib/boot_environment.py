@@ -2,9 +2,9 @@
 Functions for common boot environment tasks
 """
 
-from zedenv.lib.zfs.command import ZFS
-import zedenv.lib.zfs.utility as zfs_utility
-import zedenv.lib.zfs.linux as zfs_linux
+from pyzfsutils.lib.zfs.command import ZFS
+import pyzfsutils.lib.zfs.utility as zfs_utility
+import pyzfsutils.lib.zfs.linux as zfs_linux
 
 from zedenv.lib.logger import ZELogger
 

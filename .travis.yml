@@ -18,6 +18,8 @@ branches:
     - /.*/ # Build all branches
 
 install:
+  - git submodule update --init --recursive
+  - cd pyzfsutils && python setup.py install && cd ..
   - python setup.py install
   - pip install '.[test]'
 

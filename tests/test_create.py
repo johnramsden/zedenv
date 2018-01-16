@@ -5,7 +5,7 @@ import datetime
 import pytest
 
 import zedenv.lib.check
-import zedenv.lib.zfs.utility as zfs_utility
+import pyzfsutils.lib.zfs.utility as zfs_utility
 
 import zedenv.cli.create
 
