@@ -9,11 +9,15 @@ tests_require = [
     'pytest',
     'pytest-cov',
     'pytest-pep8',
-    'tox',
+    'tox'
 ]
 
 dev_require = [
     'Sphinx'
+]
+
+dependency_links = [
+     'git+ssh://git@github.com/johnramsden/pyzfsutils.git'
 ]
 
 
@@ -38,7 +42,7 @@ setup(
     ],
     keywords='cli',
     packages=find_packages(),
-    install_requires=['click'],
+    install_requires=['click', 'pyzfsutils'],
     setup_requires=['pytest-runner'],
     tests_require=tests_require,
     extras_require={
