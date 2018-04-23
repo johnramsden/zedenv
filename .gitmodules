@@ -1,3 +1,0 @@
-[submodule "pyzfsutils"]
-	path = pyzfsutils
-	url = git@github.com:johnramsden/pyzfsutils.git

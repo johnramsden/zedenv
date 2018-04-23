@@ -17,7 +17,7 @@ dev_require = [
 ]
 
 dependency_links = [
-     'git+ssh://git@github.com/johnramsden/pyzfsutils.git'
+     'git+ssh://git@github.com/johnramsden/pyzfsutils.git#egg=pyzfsutils'
 ]
 
 
@@ -44,6 +44,7 @@ setup(
     packages=find_packages(),
     install_requires=['click', 'pyzfsutils'],
     setup_requires=['pytest-runner'],
+    dependency_links=dependency_links,
     tests_require=tests_require,
     extras_require={
         'test': tests_require,
