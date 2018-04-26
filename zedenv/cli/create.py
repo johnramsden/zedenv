@@ -153,7 +153,7 @@ def zedenv_create(parent_dataset, root_dataset, boot_environment, verbose, exist
 @click.argument('boot_environment')
 def cli(boot_environment, verbose, existing):
 
-    parent_dataset = be.get_root()
+    parent_dataset = be.root()
     root_dataset = zfs_linux.mount_dataset("/")
 
     zedenv_create(parent_dataset, root_dataset,

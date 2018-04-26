@@ -38,29 +38,18 @@ htmlcov/
 .coverage
 .coverage.*
 .cache
-nosetests.xml
-coverage.xml
-*.cover
-.hypothesis/
-
+.pytest_cache
 # Translations
 *.mo
 *.pot
 
 # Sphinx documentation
-docs/_build/
-
-# pyenv
-.python-version
-
-# dotenv
-.env
+doc/build
 
 # virtualenv
-.venv
 venv/
-ENV/
 
 # IDE files
 .idea/
 .vscode/
+

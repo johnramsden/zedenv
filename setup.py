@@ -7,6 +7,7 @@ from zedenv import __version__
 tests_require = [
     'coverage',
     'pytest',
+    'pytest-runner',
     'pytest-cov',
     'pytest-pep8',
     'tox'
@@ -25,7 +26,9 @@ def readme():
     with open('README.rst') as f:
         return f.read()
 
-
+# Install all with:
+# pip install -e '.[dev]' '.[test]' \
+# --process-dependency-links git+ssh://git@github.com/johnramsden/pyzfsutils.git#egg=pyzfsutils
 setup(
     name='zedenv',
     version=__version__,

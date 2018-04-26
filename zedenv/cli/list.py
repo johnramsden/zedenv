@@ -10,9 +10,19 @@ import zedenv.lib.boot_environment as be
 
 from zedenv.lib.logger import ZELogger
 
+def format_boot_environment(be_list_line: list) -> str:
+    """
+    Formats list into column seperated string.
+    """
+    return " ".join(["{: <16}"] * len(be_list_line)).format(*be_list_line)
 
-def configure_boot_environment_list() -> list:
-    boot_environments = be.list_boot_environments(be.get_root())
+
+def configure_boot_environment_list(be_root: str) -> list:
+    """
+    Converts a list of boot environments with their properties to be printed
+    to a list of column separated strings.
+    """
+    boot_environments = be.list_boot_environments(be_root)
 
     formatted_boot_environments = list()
 
@@ -21,11 +31,26 @@ def configure_boot_environment_list() -> list:
             boot_env = [zfs_utility.dataset_child_name(env[0])] + env[1:]
             formatted_boot_environments.append(boot_env)
 
-    for fenv in formatted_boot_environments:
-        # set the columns to a minimum of 20 characters and align text to right.
-        print("{: <20} {: <20} {: <20} {: <20} {: <20} {: <20} {: <20} {: <20}".format(*fenv))
+    return [format_boot_environment(b) for b in formatted_boot_environments]
 
-    return formatted_boot_environments
+
+def zedenv_list(verbose, all_datasets, spaceused, scripting, snapshots, be_root):
+    """
+    But actual function to be called in this separate function to allow easier testing.
+    """
+    ZELogger.verbose_log({
+        "level":   "INFO", "message": "Listing Boot Environments:\n"
+    }, verbose)
+
+    boot_environments = configure_boot_environment_list(be_root)
+
+    if not scripting:
+        list_header = format_boot_environment(
+            ["name", "used", "usedds", "usedbysnapshots", "usedrefreserv", "refer", "origin", "creation"])
+        ZELogger.log({"level": "INFO", "message": list_header}, verbose)
+
+    for list_output in boot_environments:
+        ZELogger.log({"level": "INFO", "message": list_output}, verbose)
 
 
 @click.command(name="list",
@@ -33,7 +58,7 @@ def configure_boot_environment_list() -> list:
 @click.option('--verbose', '-v',
               is_flag=True,
               help="Print verbose output.")
-@click.option('--all', '-a',
+@click.option('--alldatasets', '-a',
               is_flag=True,
               help="Display all datasets.")
 @click.option('--spaceused', '-D',
@@ -45,18 +70,5 @@ def configure_boot_environment_list() -> list:
 @click.option('--snapshots', '-s',
               is_flag=True,
               help="Display snapshots.")
-def cli(verbose, all, spaceused, scripting, snapshots):
-
-    parent_dataset = be.get_root()
-    root_dataset = zfs_linux.mount_dataset("/")
-
-    ZELogger.verbose_log({
-        "level":   "INFO", "message": "Listing Boot Environments:\n"
-    }, verbose)
-
-    boot_environments = configure_boot_environment_list()
-
-    # Headers:
-    # BE              Active Mountpoint  Space Created
-    for list_output in boot_environments:
-        ZELogger.log({"level": "INFO", "message": list_output}, verbose)
+def cli(verbose, alldatasets, spaceused, scripting, snapshots):
+    zedenv_list(verbose, alldatasets, spaceused, scripting, snapshots, be.root())
