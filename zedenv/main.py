@@ -3,10 +3,10 @@ zedenv boot environment manager cli
 """
 import os
 import signal
-import subprocess
 import sys
 
 import click
+
 import zedenv
 import zedenv.lib.check as ze_check
 
@@ -24,7 +24,6 @@ plugin_folder = os.path.join(os.path.dirname(__file__), 'cli')
 
 
 class ZECLI(click.MultiCommand):
-
     """
     Add all commands in cli directory
     """

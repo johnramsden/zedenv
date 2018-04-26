@@ -1,14 +1,11 @@
 """List boot environments cli"""
 
 import click
-
-from pyzfsutils.lib.zfs.command import ZFS
 import pyzfsutils.lib.zfs.utility as zfs_utility
-import pyzfsutils.lib.zfs.linux as zfs_linux
 
 import zedenv.lib.boot_environment as be
-
 from zedenv.lib.logger import ZELogger
+
 
 def format_boot_environment(be_list_line: list) -> str:
     """
@@ -39,14 +36,14 @@ def zedenv_list(verbose, all_datasets, spaceused, scripting, snapshots, be_root)
     But actual function to be called in this separate function to allow easier testing.
     """
     ZELogger.verbose_log({
-        "level":   "INFO", "message": "Listing Boot Environments:\n"
+        "level": "INFO", "message": "Listing Boot Environments:\n"
     }, verbose)
 
     boot_environments = configure_boot_environment_list(be_root)
 
     if not scripting:
-        list_header = format_boot_environment(
-            ["name", "used", "usedds", "usedbysnapshots", "usedrefreserv", "refer", "origin", "creation"])
+        list_header = format_boot_environment(["name", "used", "usedds", "usedbysnapshots",
+                                               "usedrefreserv", "refer", "origin", "creation"])
         ZELogger.log({"level": "INFO", "message": list_header}, verbose)
 
     for list_output in boot_environments:

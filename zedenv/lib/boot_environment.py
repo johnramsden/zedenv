@@ -2,19 +2,18 @@
 Functions for common boot environment tasks
 """
 
-from pyzfsutils.lib.zfs.command import ZFS
-import pyzfsutils.lib.zfs.utility as zfs_utility
 import pyzfsutils.lib.zfs.linux as zfs_linux
+import pyzfsutils.lib.zfs.utility as zfs_utility
+from pyzfsutils.lib.zfs.command import ZFS
 
 from zedenv.lib.logger import ZELogger
 
-import re
-from datetime import datetime
 
 # TODO: Normalize based on size suffix.
 def normalize(value):
     normalized = 1
     return normalized
+
 
 # TODO: Write function to get size
 def size(boot_environment) -> int:
@@ -56,7 +55,6 @@ def list_boot_environments(target) -> list:
         Space = usedds + usedrefreserv
           If all prior BE destroyed (full space):
             Space += usedbysnapshots
-        
     """
     try:
         list_output = ZFS.list(target, recursive=True,

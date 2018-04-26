@@ -2,13 +2,11 @@
 Common functions
 """
 
-import logging
 import logging.config
 import logging.handlers
 
 
 class ZELogger:
-
     logger_config = {
         'version': 1,
         'formatters': {

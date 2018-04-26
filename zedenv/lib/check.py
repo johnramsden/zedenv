@@ -2,9 +2,7 @@
 Startup checks
 """
 
-import sys
 import subprocess
-import logging
 
 import pyzfsutils.lib.zfs.linux
 
