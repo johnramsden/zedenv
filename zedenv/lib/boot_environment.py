@@ -33,7 +33,7 @@ def root(mount_dataset="/"):
     return zfs_utility.dataset_parent(zfs_linux.mount_dataset(mount_dataset))
 
 
-def list_boot_environments(target) -> list:
+def list_boot_environments(target, columns: list) -> list:
     """
     zfs list -H -t filesystem,snapshot,volume \
     -s creation \
@@ -60,9 +60,7 @@ def list_boot_environments(target) -> list:
         list_output = ZFS.list(target, recursive=True,
                                zfs_types=["filesystem", "snapshot", "volume"],
                                sort_properties_ascending=["creation"],
-                               columns=["name", "used", "usedds",
-                                        "usedbysnapshots", "usedrefreserv",
-                                        "refer", "origin", "creation"])
+                               columns=columns)
     except RuntimeError:
         ZELogger.log({
             "level": "EXCEPTION", "message": f"Failed to get properties of '{target}'"
