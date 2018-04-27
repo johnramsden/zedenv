@@ -129,6 +129,13 @@ def zedenv_create(parent_dataset, root_dataset, boot_environment, verbose, exist
                    f"Creating Boot Environment: {boot_environment_dataset}\n"
     }, verbose)
 
+    if zfs_utility.dataset_exists(boot_environment_dataset):
+        ZELogger.log({
+            "level": "EXCEPTION",
+            "message": (f"Failed to create {boot_environment_dataset}",
+                        f" already exists.")
+        }, exit_on_error=True)
+
     try:
         ZFS.clone(clone_sources['snapshot'],
                   boot_environment_dataset,

@@ -52,14 +52,8 @@ List boot environments
 Testing
 -------
 
-To test using pytest, run it from the tests directory with a zfs dataset.
+To test using pytest, run it from the root directory with a zfs dataset.
 
 .. code:: shell
 
-    $ pytest --root-dataset="zpool/ROOT/default"
-
-To test coverage run pytest wuth the pytest-cov plugin.
-
-.. code:: shell
-
-    $ pytest --root-dataset="zpool/ROOT/default" --cov=zedenv
+    # pytest tests --root-dataset="zpool/ROOT/default"

@@ -7,14 +7,17 @@ import zedenv.lib.boot_environment as be
 from zedenv.lib.logger import ZELogger
 
 
-def format_boot_environment(be_list_line: list) -> str:
+def format_boot_environment(be_list_line: list, scripting) -> str:
     """
-    Formats list into column separated string.
+    Formats list into column separated string with tabs if scripting.
     """
-    return " ".join(["{: <16}"] * len(be_list_line)).format(*be_list_line)
+    if scripting:
+        return "\t".join(be_list_line)
+    else:
+        return " ".join(["{: <16}"] * len(be_list_line)).format(*be_list_line)
 
 
-def configure_boot_environment_list(be_root, columns: list) -> list:
+def configure_boot_environment_list(be_root, columns: list, scripting) -> list:
     """
     Converts a list of boot environments with their properties to be printed
     to a list of column separated strings.
@@ -28,7 +31,7 @@ def configure_boot_environment_list(be_root, columns: list) -> list:
             boot_env = [zfs_utility.dataset_child_name(env[0])] + env[1:]
             formatted_boot_environments.append(boot_env)
 
-    return [format_boot_environment(b) for b in formatted_boot_environments]
+    return [format_boot_environment(b, scripting) for b in formatted_boot_environments]
 
 
 def zedenv_list(verbose, all_datasets, spaceused, scripting, snapshots, be_root):
@@ -53,10 +56,10 @@ def zedenv_list(verbose, all_datasets, spaceused, scripting, snapshots, be_root)
 
     columns.extend(["origin", "creation"])
 
-    boot_environments = configure_boot_environment_list(be_root, columns)
+    boot_environments = configure_boot_environment_list(be_root, columns, scripting)
 
     if not scripting:
-        list_header = format_boot_environment(columns)
+        list_header = format_boot_environment(columns, scripting)
         ZELogger.log({"level": "INFO", "message": list_header}, verbose)
 
     for list_output in boot_environments:

@@ -1,6 +1,4 @@
 from setuptools import setup, find_packages
-from os.path import abspath, dirname, join
-from subprocess import call
 
 from zedenv import __version__
 
@@ -27,7 +25,8 @@ def readme():
         return f.read()
 
 # Install all with:
-# pip install -e '.[dev]' '.[test]' \
+# pip install -e .
+# pip install '.[dev]' '.[test]' \
 # --process-dependency-links git+ssh://git@github.com/johnramsden/pyzfsutils.git#egg=pyzfsutils
 setup(
     name='zedenv',
