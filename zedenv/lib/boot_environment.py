@@ -35,19 +35,6 @@ def root(mount_dataset="/"):
 
 def list_boot_environments(target, columns: list) -> list:
     """
-    zfs list -H -t filesystem,snapshot,volume \
-    -s creation \
-    -o name,used,usedds,usedbysnapshots,usedrefreserv,refer,creation,origin \
-    -r
-    """
-
-    """
-        def list(cls, target, recursive=False, depth=None, scripting=True,
-             parsable=False, columns: list = None, zfs_types: list = None,
-             sort_properties_ascending: list = None, sort_properties_descending: list = None):
-    """
-
-    """
     TODO:
     Space Used:
     By Snapshot = used

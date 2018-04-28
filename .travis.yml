@@ -23,4 +23,5 @@ install:
 
 script:
   - pytest --pep8
-  - sudo env "PATH=$PATH" pytest --cov=zedenv tests --root-dataset="zpool/ROOT/default"
+  - pytest --cov=zedenv tests
+  - sudo env "PATH=$PATH" pytest tests --root-dataset="zpool/ROOT/default"
