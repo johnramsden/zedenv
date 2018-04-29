@@ -1,7 +1,5 @@
 """List boot environments cli"""
 
-import datetime
-
 import click
 import pyzfsutils.lib.zfs.linux as zfs_linux
 import pyzfsutils.lib.zfs.utility as zfs_utility
@@ -11,67 +9,7 @@ import zedenv.lib.boot_environment as be
 from zedenv.lib.logger import ZELogger
 
 
-# noinspection PyUnboundLocalVariable
-def boot_env_properties(dataset):
-    try:
-        properties = ZFS.get(dataset,
-                             columns=["property", "value"],
-                             source=["local", "received"],
-                             properties=["all"])
-    except RuntimeError:
-        ZELogger.log({
-            "level": "EXCEPTION",
-            "message": f"Failed to get properties of '{dataset}'"
-        }, exit_on_error=True)
-
-    """
-    Take each line of output containing properties and convert
-    it to a list of property=value strings
-    """
-    property_list = ["=".join(line.split()) for line in properties.splitlines()]
-    if "canmount=off" not in property_list:
-        property_list.append("canmount=off")
-
-    return property_list
-
-
-def snapshot_boot_environment(boot_environment_name, boot_environment_root,
-                              snap_prefix="zedenv"):
-    if "/" in boot_environment_name:
-        ZELogger.log({
-            "level": "EXCEPTION",
-            "message": ("Failed to get snapshot.\n",
-                        "Existing boot environment name ",
-                        f"{boot_environment_name} should not contain '/'")
-        }, exit_on_error=True)
-
-    dataset_name = f"{boot_environment_root}/{boot_environment_name}"
-
-    snap_suffix = "{prefix}-{suffix}".format(prefix=snap_prefix,
-                                             suffix=datetime.datetime.now().isoformat())
-
-    try:
-        ZFS.snapshot(dataset_name, snap_suffix, recursive=True)
-    except RuntimeError:
-        ZELogger.log({
-            "level": "EXCEPTION",
-            "message": f"Failed to create snapshot: '{dataset_name}@{snap_suffix}'"
-        }, exit_on_error=True)
-
-    return snap_suffix
-
-
-def snapshot_exists(target):
-    try:
-        ZFS.list(target, "snapshot")
-    except RuntimeError:
-        return False
-
-    return True
-
-
 def get_clones(dataset_source, existing) -> list:
-    global clones
     parent_dataset = zfs_utility.dataset_parent(dataset_source)
 
     clone_data = list()
@@ -80,16 +18,15 @@ def get_clones(dataset_source, existing) -> list:
             snap_suffix = existing.rsplit('@', 1)[-1]
             list_dataset = zfs_utility.snapshot_parent_dataset(existing)
         else:
-            snap_suffix = snapshot_boot_environment(
-                            existing,
-                            zfs_utility.dataset_parent(dataset_source))
+            snap_suffix = be.snapshot(existing,
+                                      zfs_utility.dataset_parent(dataset_source))
             list_dataset = existing
     else:
-        snap_suffix = snapshot_boot_environment(
-                        zfs_utility.dataset_child_name(dataset_source),
-                        parent_dataset)
+        snap_suffix = be.snapshot(zfs_utility.dataset_child_name(dataset_source),
+                                  parent_dataset)
         list_dataset = dataset_source
 
+    clones = None
     try:
         clones = ZFS.list(list_dataset, recursive=True, columns=["name"])
     except RuntimeError as e:
@@ -111,7 +48,7 @@ def get_clones(dataset_source, existing) -> list:
                 child = zfs_utility.dataset_child_name(c)
             clone_data.append({
                 "snapshot": f"{c}@{snap_suffix}",
-                "properties": boot_env_properties(c),
+                "properties": be.properties(c, ["canmount=off"]),
                 "datasetchild": child
             })
         else:

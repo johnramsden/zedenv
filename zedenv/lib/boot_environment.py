@@ -2,6 +2,8 @@
 Functions for common boot environment tasks
 """
 
+import datetime
+
 import pyzfsutils.lib.zfs.linux as zfs_linux
 import pyzfsutils.lib.zfs.utility as zfs_utility
 from pyzfsutils.lib.zfs.command import ZFS
@@ -30,6 +32,63 @@ def size(boot_environment) -> int:
 
     return 1
 """
+
+
+def properties(dataset, appended_properties: list) -> list:
+    dataset_properties = None
+    try:
+        dataset_properties = ZFS.get(dataset,
+                                     columns=["property", "value"],
+                                     source=["local", "received"],
+                                     properties=["all"])
+    except RuntimeError:
+        ZELogger.log({
+            "level": "EXCEPTION",
+            "message": f"Failed to get properties of '{dataset}'"
+        }, exit_on_error=True)
+
+    """
+    Take each line of output containing properties and convert
+    it to a list of property=value strings
+    """
+    property_list = ["=".join(line.split()) for line in dataset_properties.splitlines()]
+    for p in appended_properties:
+        if p not in property_list:
+            property_list.append(p)
+
+    return property_list
+
+
+def snapshot(boot_environment_name, boot_environment_root, snap_prefix="zedenv"):
+    """
+    Recursively Snapshot BE
+    :param boot_environment_name: Name of BE to snapshot.
+    :param boot_environment_root: Root dataset for BEs.
+    :param snap_prefix: Prefix on snapshot names.
+    :return: Name of snapshot without dataset.
+    """
+    if "/" in boot_environment_name:
+        ZELogger.log({
+            "level": "EXCEPTION",
+            "message": ("Failed to get snapshot.\n",
+                        "Existing boot environment name ",
+                        f"{boot_environment_name} should not contain '/'")
+        }, exit_on_error=True)
+
+    dataset_name = f"{boot_environment_root}/{boot_environment_name}"
+
+    snap_suffix = "{prefix}-{suffix}".format(prefix=snap_prefix,
+                                             suffix=datetime.datetime.now().isoformat())
+
+    try:
+        ZFS.snapshot(dataset_name, snap_suffix, recursive=True)
+    except RuntimeError:
+        ZELogger.log({
+            "level": "EXCEPTION",
+            "message": f"Failed to create snapshot: '{dataset_name}@{snap_suffix}'"
+        }, exit_on_error=True)
+
+    return snap_suffix
 
 
 def root(mount_dataset="/"):
