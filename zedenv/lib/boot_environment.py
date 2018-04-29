@@ -9,12 +9,14 @@ from pyzfsutils.lib.zfs.command import ZFS
 from zedenv.lib.logger import ZELogger
 
 
+"""
 # TODO: Normalize based on size suffix.
 def normalize(value):
     normalized = 1
     return normalized
+"""
 
-
+"""
 # TODO: Write function to get size
 def size(boot_environment) -> int:
     # Space calculation:
@@ -27,6 +29,7 @@ def size(boot_environment) -> int:
                        columns=["value"])
 
     return 1
+"""
 
 
 def root(mount_dataset="/"):
@@ -57,6 +60,7 @@ def list_boot_environments(target, columns: list) -> list:
     Take each line of output containing properties and convert
     it to a list of property=value strings
     """
+    # noinspection PyUnboundLocalVariable
     property_list = [line for line in list_output.splitlines()]
     split_property_list = [line.split() for line in property_list]
 

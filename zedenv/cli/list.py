@@ -47,8 +47,7 @@ def configure_boot_environment_list(be_root, columns: list, scripting) -> list:
         formatted_boot_environments.append(format_boot_environment(columns, scripting, widths))
 
     formatted_boot_environments.extend(
-        [format_boot_environment(b, scripting, widths) for b in unformatted_boot_environments]
-    )
+        [format_boot_environment(b, scripting, widths) for b in unformatted_boot_environments])
 
     return formatted_boot_environments
 
