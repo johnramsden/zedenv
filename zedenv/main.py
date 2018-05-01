@@ -8,7 +8,8 @@ import sys
 import click
 
 import zedenv
-import zedenv.lib.check as ze_check
+import zedenv.lib.check
+import zedenv.lib.configure
 
 signal.signal(signal.SIGINT, signal.default_int_handler)
 
@@ -20,7 +21,20 @@ def print_version(ctx, param, value):
     ctx.exit()
 
 
-plugin_folder = os.path.join(os.path.dirname(__file__), 'cli')
+def list_plugins(ctx, param, value):
+    if not value or ctx.resilient_parsing:
+        return
+
+    plugins = zedenv.lib.configure.get_plugins()
+
+    click.echo("Loaded plugins:")
+    for key, value in plugins.items():
+        click.echo(key)
+
+    ctx.exit()
+
+
+command_modules_folder = os.path.join(os.path.dirname(__file__), 'cli')
 
 
 class ZECLI(click.MultiCommand):
@@ -30,7 +44,7 @@ class ZECLI(click.MultiCommand):
 
     def list_commands(self, ctx):
         rv = []
-        for filename in os.listdir(plugin_folder):
+        for filename in os.listdir(command_modules_folder):
             if filename.endswith('.py') and not filename.startswith('__init__'):
                 rv.append(filename[:-3])
         rv.sort()
@@ -38,7 +52,7 @@ class ZECLI(click.MultiCommand):
 
     def get_command(self, ctx, name):
         ns = {}
-        fn = os.path.join(plugin_folder, name + '.py')
+        fn = os.path.join(command_modules_folder, name + '.py')
         with open(fn) as f:
             code = compile(f.read(), fn, 'exec')
             eval(code, ns, ns)
@@ -50,10 +64,17 @@ class ZECLI(click.MultiCommand):
               is_flag=True,
               callback=print_version,
               expose_value=False)
+@click.option('--plugins',
+              is_flag=True,
+              callback=list_plugins,
+              expose_value=False)
+# Information on callbacks:
+# http://pocco-click.readthedocs.io/en/latest/options.html#callbacks-and-eager-options
 def cli():
     """ZFS boot environment manager cli"""
+
     try:
-        ze_check.startup_check()
+        zedenv.lib.check.startup_check()
     except RuntimeError as err:
         click.echo(f"Startup check failed.")
         sys.exit(err)

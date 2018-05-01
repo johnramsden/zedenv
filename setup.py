@@ -52,10 +52,11 @@ setup(
         'test': tests_require,
         'dev': dev_require,
     },
-    entry_points={
-        'console_scripts': [
-            'zedenv=zedenv.main:cli'
-        ],
-    },
+    entry_points="""
+        [console_scripts]
+        zedenv = zedenv.main:cli
+        [zedenv.plugins]
+        systemdboot = zedenv.plugins.systemdboot:SystemdBoot
+    """,
     zip_safe=False,
 )
