@@ -24,6 +24,7 @@ def readme():
     with open('README.rst') as f:
         return f.read()
 
+
 # Install all with:
 # pip install -e .
 # pip install '.[dev]' '.[test]' \

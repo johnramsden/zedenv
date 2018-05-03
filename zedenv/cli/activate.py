@@ -28,10 +28,12 @@ def zedenv_activate(boot_environment, verbose, bootloader, legacy):
                     "message": "Configuring boot environment "
                                f"bootloader with {bootloader}\n"
                 }, verbose)
-                bootloader_plugin = plugins[bootloader]()
+                bootloader_plugin = plugins[bootloader](
+                    boot_environment, verbose, bootloader, legacy)
+                # bootloader_plugin.activate()
                 ZELogger.verbose_log({
                     "level": "INFO",
-                    "message": f"Plugin {bootloader_plugin}\n"
+                    "message": f"Plugin {bootloader_plugin.activate()}\n"
                 }, verbose)
         else:
             ZELogger.log({
