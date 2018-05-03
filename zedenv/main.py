@@ -65,6 +65,7 @@ class ZECLI(click.MultiCommand):
               callback=print_version,
               expose_value=False)
 @click.option('--plugins',
+              help="List available plugins.",
               is_flag=True,
               callback=list_plugins,
               expose_value=False)

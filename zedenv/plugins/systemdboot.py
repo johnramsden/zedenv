@@ -1,3 +1,6 @@
 class SystemdBoot:
     def __init__(self):
-        print("Registered systemdboot plugin")
+        pass
+
+    def dey(self):
+        return "Registered systemdboot plugin"

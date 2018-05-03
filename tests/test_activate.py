@@ -11,4 +11,5 @@ require_root_dataset = pytest.mark.require_root_dataset
 def test_boot_environment_activated(root_dataset):
     verbose = True
 
-    zedenv.cli.activate.zedenv_activate(root_dataset, verbose)
+    zedenv.cli.activate.zedenv_activate(root_dataset, verbose,
+                                        "systemdboot", False)
