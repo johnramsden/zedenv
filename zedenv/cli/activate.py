@@ -1,12 +1,8 @@
 """List boot environments cli"""
 
 import click
-import pyzfsutils.lib.zfs.linux as zfs_linux
-import pyzfsutils.lib.zfs.utility as zfs_utility
-from pyzfsutils.lib.zfs.command import ZFS
 
 import zedenv.lib.configure
-import zedenv.lib.boot_environment as be
 from zedenv.lib.logger import ZELogger
 
 

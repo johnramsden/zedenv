@@ -3,16 +3,12 @@
 import datetime
 
 import pytest
-import pyzfsutils.lib.zfs.utility as zfs_utility
+import pyzfsutils.utility as zfs_utility
 
 import zedenv.cli.create
 import zedenv.lib.check
 
 require_root_dataset = pytest.mark.require_root_dataset
-
-
-def test_zfs_module_loaded():
-    assert zedenv.lib.check.zfs_module_loaded()
 
 
 @require_root_dataset

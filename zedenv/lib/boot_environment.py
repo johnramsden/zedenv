@@ -4,9 +4,11 @@ Functions for common boot environment tasks
 
 import datetime
 
-import pyzfsutils.lib.zfs.linux as zfs_linux
-import pyzfsutils.lib.zfs.utility as zfs_utility
-from pyzfsutils.lib.zfs.command import ZFS
+import pyzfsutils.system.agnostic
+import pyzfsutils.check
+
+import pyzfsutils.utility as zfs_utility
+from pyzfsutils.command import ZFS
 
 from zedenv.lib.logger import ZELogger
 
@@ -92,7 +94,8 @@ def snapshot(boot_environment_name, boot_environment_root, snap_prefix="zedenv")
 
 
 def root(mount_dataset="/"):
-    return zfs_utility.dataset_parent(zfs_linux.mount_dataset(mount_dataset))
+    return zfs_utility.dataset_parent(
+        pyzfsutils.system.agnostic.mountpoint_dataset(mount_dataset))
 
 
 def list_boot_environments(target, columns: list) -> list:

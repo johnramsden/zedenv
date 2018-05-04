@@ -1,5 +1,4 @@
 import pkg_resources
-import click
 
 
 # Import plugins

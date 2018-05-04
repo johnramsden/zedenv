@@ -77,7 +77,7 @@ def cli():
     try:
         zedenv.lib.check.startup_check()
     except RuntimeError as err:
-        click.echo(f"Startup check failed.")
+        click.echo("Startup check failed.\n")
         sys.exit(err)
 
 
