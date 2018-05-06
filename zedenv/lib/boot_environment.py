@@ -4,14 +4,12 @@ Functions for common boot environment tasks
 
 import datetime
 
-import pyzfsutils.system.agnostic
 import pyzfsutils.check
-
+import pyzfsutils.cmd
+import pyzfsutils.system.agnostic
 import pyzfsutils.utility as zfs_utility
-from pyzfsutils.command import ZFS
 
 from zedenv.lib.logger import ZELogger
-
 
 """
 # TODO: Normalize based on size suffix.
@@ -28,7 +26,7 @@ def size(boot_environment) -> int:
     # 60f8d4de7b0a0a59360f631816d36cfefcc86b75/beadm#L389-L421
 
     if not zfs_utility.is_clone(boot_environment):
-        used = ZFS.get(boot_environment,
+        used = pyzfsutils.cmd.zfs_get(boot_environment,
                        properties=["used"],
                        columns=["value"])
 
@@ -39,10 +37,10 @@ def size(boot_environment) -> int:
 def properties(dataset, appended_properties: list) -> list:
     dataset_properties = None
     try:
-        dataset_properties = ZFS.get(dataset,
-                                     columns=["property", "value"],
-                                     source=["local", "received"],
-                                     properties=["all"])
+        dataset_properties = pyzfsutils.cmd.zfs_get(dataset,
+                                                    columns=["property", "value"],
+                                                    source=["local", "received"],
+                                                    properties=["all"])
     except RuntimeError:
         ZELogger.log({
             "level": "EXCEPTION",
@@ -83,7 +81,7 @@ def snapshot(boot_environment_name, boot_environment_root, snap_prefix="zedenv")
                                              suffix=datetime.datetime.now().isoformat())
 
     try:
-        ZFS.snapshot(dataset_name, snap_suffix, recursive=True)
+        pyzfsutils.cmd.zfs_snapshot(dataset_name, snap_suffix, recursive=True)
     except RuntimeError:
         ZELogger.log({
             "level": "EXCEPTION",
@@ -109,10 +107,10 @@ def list_boot_environments(target, columns: list) -> list:
             Space += usedbysnapshots
     """
     try:
-        list_output = ZFS.list(target, recursive=True,
-                               zfs_types=["filesystem", "snapshot", "volume"],
-                               sort_properties_ascending=["creation"],
-                               columns=columns)
+        list_output = pyzfsutils.cmd.zfs_list(target, recursive=True,
+                                              zfs_types=["filesystem", "snapshot", "volume"],
+                                              sort_properties_ascending=["creation"],
+                                              columns=columns)
     except RuntimeError:
         ZELogger.log({
             "level": "EXCEPTION", "message": f"Failed to get properties of '{target}'"
@@ -132,7 +130,7 @@ def list_boot_environments(target, columns: list) -> list:
     for line in split_property_list:
         if line[0] != target:
             # Get all properties except date
-            formatted_property_line = line[:len(line)-date_items]
+            formatted_property_line = line[:len(line) - date_items]
 
             # Add date converted to string
             formatted_property_line.append("-".join(line[-date_items:]))
