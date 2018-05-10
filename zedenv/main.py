@@ -7,6 +7,9 @@ import sys
 
 import click
 
+import pyzfsutils.cmd
+import pyzfsutils.check
+
 import zedenv
 import zedenv.lib.check
 import zedenv.lib.configure
@@ -75,9 +78,15 @@ def cli():
     """ZFS boot environment manager cli"""
 
     try:
-        zedenv.lib.check.startup_check()
+        pyzfsutils.check.is_root_on_zfs()
     except RuntimeError as err:
-        click.echo("Startup check failed.\n")
+        click.echo("System is not booting off a ZFS root dataset.\n")
+        sys.exit(err)
+
+    try:
+        zedenv.lib.check.startup_check_bootfs()
+    except RuntimeError as err:
+        click.echo("Couldn't get bootfs property of pool.\n")
         sys.exit(err)
 
 

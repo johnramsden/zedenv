@@ -3,7 +3,6 @@
 import click
 
 import zedenv.lib.configure
-import zedenv.lib.boot_environment as be
 from zedenv.lib.logger import ZELogger
 
 
@@ -47,7 +46,8 @@ def zedenv_activate(boot_environment, verbose, bootloader, legacy):
         "message": f"Activating Boot Environment: {boot_environment}\n"
     }, verbose)
 
-    # if be.root()
+    if bootloader_plugin is not None:
+        bootloader_plugin.activate()
 
 
 @click.command(name="activate",

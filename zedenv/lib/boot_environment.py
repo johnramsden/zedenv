@@ -106,6 +106,7 @@ def list_boot_environments(target, columns: list) -> list:
           If all prior BE destroyed (full space):
             Space += usedbysnapshots
     """
+    list_output = None
     try:
         list_output = pyzfsutils.cmd.zfs_list(target, recursive=True,
                                               zfs_types=["filesystem", "snapshot", "volume"],
@@ -120,7 +121,7 @@ def list_boot_environments(target, columns: list) -> list:
     Take each line of output containing properties and convert
     it to a list of property=value strings
     """
-    # noinspection PyUnboundLocalVariable
+
     property_list = [line for line in list_output.splitlines()]
     split_property_list = [line.split() for line in property_list]
 

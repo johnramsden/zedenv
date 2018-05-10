@@ -5,6 +5,10 @@ language: python
 python:
   - "3.6"
 
+env:
+  global:
+  - TEST_POOL="zpool"
+
 cache:
   pip: true
   custom_install: true
@@ -22,6 +26,8 @@ install:
   - pip install '.[test]'
 
 script:
-  - pytest --pep8
-  - pytest --cov=zedenv tests
-  - sudo env "PATH=$PATH" pytest tests --root-dataset="zpool/ROOT/default"
+  - |
+    sudo env "PATH=$PATH" \
+         pytest --pep8 --cov=zedenv tests \
+                                   --zpool="${TEST_POOL}" \
+                                   --root-dataset="${TEST_POOL}/ROOT/default"

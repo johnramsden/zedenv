@@ -13,7 +13,8 @@ modprobe zfs || exit 1
 
 mkdir -p ${ZEDENV_DIR} || exit 1
 
-truncate -s 100M "${TEST_DISK}" && zpool create "${TEST_POOL}" "${TEST_DISK}"
+truncate -s 100M "${TEST_DISK}" && \
+zpool create "${TEST_POOL}" "${TEST_DISK}"
 if [ $? -ne 0 ]; then
     echo "Failed to create test pool ""'""${TEST_POOL}""'"" with disk ""'""${TEST_DISK}"
     exit 1
@@ -23,7 +24,8 @@ mkdir -p "${ZPOOL_ROOT_MOUNTPOINT}" && \
 zfs create -p -o mountpoint="${ZPOOL_ROOT_MOUNTPOINT}" "${TEST_DATASET}" && \
 mkdir -p "${ZPOOL_ROOT_MOUNTPOINT}/usr" "${ZPOOL_ROOT_MOUNTPOINT}/var"
 zfs create -p -o mountpoint="${ZPOOL_ROOT_MOUNTPOINT}/usr" "${TEST_DATASET}/usr" && \
-zfs create -p -o mountpoint="${ZPOOL_ROOT_MOUNTPOINT}/var" "${TEST_DATASET}/var"
+zfs create -p -o mountpoint="${ZPOOL_ROOT_MOUNTPOINT}/var" "${TEST_DATASET}/var" && \
+zpool set bootfs="${TEST_DATASET}" "${TEST_POOL}"
 
 if [ $? -ne 0 ]; then
     echo "Failed to create test dataset ""'""${TEST_DATASET}""'"
