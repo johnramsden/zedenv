@@ -1,9 +1,12 @@
 """List boot environments cli"""
 
+import sys
+
 import click
 
 import zedenv.lib.configure
 from zedenv.lib.logger import ZELogger
+import zedenv.lib.check
 
 
 def get_bootloader(boot_environment, verbose, bootloader, legacy):
@@ -62,4 +65,9 @@ def zedenv_activate(boot_environment, verbose, bootloader, legacy):
               help="Legacy mountpoint type.")
 @click.argument('boot_environment')
 def cli(boot_environment, verbose, bootloader, legacy):
+    try:
+        zedenv.lib.check.startup_check()
+    except RuntimeError as err:
+        sys.exit(err)
+
     zedenv_activate(boot_environment, verbose, bootloader, legacy)

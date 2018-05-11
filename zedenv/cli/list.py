@@ -3,8 +3,8 @@
 import sys
 
 import click
+
 import pyzfsutils.utility as zfs_utility
-import pyzfsutils.check
 
 import zedenv.lib.boot_environment as be
 import zedenv.lib.check
@@ -103,15 +103,8 @@ def zedenv_list(verbose, all_datasets, spaceused, scripting, snapshots, be_root)
               help="Display snapshots.")
 def cli(verbose, alldatasets, spaceused, scripting, snapshots):
     try:
-        pyzfsutils.check.is_root_on_zfs()
+        zedenv.lib.check.startup_check()
     except RuntimeError as err:
-        click.echo("System is not booting off a ZFS root dataset.\n")
-        sys.exit(err)
-
-    try:
-        zedenv.lib.check.startup_check_bootfs()
-    except RuntimeError as err:
-        click.echo("Couldn't get bootfs property of pool.\n")
         sys.exit(err)
 
     zedenv_list(verbose, alldatasets, spaceused, scripting, snapshots, be.root())

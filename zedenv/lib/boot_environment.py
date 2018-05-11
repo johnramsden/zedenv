@@ -91,12 +91,17 @@ def snapshot(boot_environment_name, boot_environment_root, snap_prefix="zedenv")
     return snap_suffix
 
 
-def root(mount_dataset="/"):
+def root(mount_dataset: str = "/") -> str:
     return zfs_utility.dataset_parent(
         pyzfsutils.system.agnostic.mountpoint_dataset(mount_dataset))
 
 
-def list_boot_environments(target, columns: list) -> list:
+def pool(mount_dataset: str = "/") -> str:
+    return pyzfsutils.system.agnostic.mountpoint_dataset(
+                                                mount_dataset).split("/")[0]
+
+
+def list_boot_environments(target: str, columns: list) -> list:
     """
     TODO:
     Space Used:

@@ -28,6 +28,8 @@ install:
 script:
   - |
     sudo env "PATH=$PATH" \
-         pytest --pep8 --cov=zedenv tests \
-                                   --zpool="${TEST_POOL}" \
-                                   --root-dataset="${TEST_POOL}/ROOT/default"
+         pytest --cov=zedenv tests \
+                               --zpool="${TEST_POOL}" \
+                               --root-dataset="${TEST_POOL}/ROOT/default"
+
+after_script: pytest --pep8

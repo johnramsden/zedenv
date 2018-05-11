@@ -1,5 +1,7 @@
 """List boot environments cli"""
 
+import sys
+
 import click
 import pyzfsutils.system.agnostic
 import pyzfsutils.utility as zfs_utility
@@ -7,6 +9,7 @@ import pyzfsutils.cmd
 
 import zedenv.lib.boot_environment as be
 from zedenv.lib.logger import ZELogger
+import zedenv.lib.check
 
 
 def get_clones(dataset_source, existing) -> list:
@@ -131,6 +134,11 @@ def zedenv_create(parent_dataset, root_dataset, boot_environment, verbose, exist
               help="Use existing boot environment as source.")
 @click.argument('boot_environment')
 def cli(boot_environment, verbose, existing):
+    try:
+        zedenv.lib.check.startup_check()
+    except RuntimeError as err:
+        sys.exit(err)
+
     parent_dataset = be.root()
     root_dataset = pyzfsutils.system.agnostic.mountpoint_dataset("/")
 
