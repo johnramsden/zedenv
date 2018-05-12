@@ -32,4 +32,4 @@ script:
                                --zpool="${TEST_POOL}" \
                                --root-dataset="${TEST_POOL}/ROOT/default"
 
-after_script: pytest --pep8
+after_script: sudo env "PATH=$PATH" pytest --pep8

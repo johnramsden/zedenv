@@ -1,8 +1,11 @@
 
 class SystemdBoot:
+    systems_allowed = ["linux"]
 
     def __init__(self, boot_environment: str,
-                 bootloader: str, verbose: bool, legacy: bool):
+                 bootloader: str,
+                 verbose: bool,
+                 legacy: bool):
         self.boot_environment = boot_environment
         self.bootloader = bootloader
         self.verbose = verbose

@@ -1,6 +1,8 @@
 """List boot environments cli"""
 
 import sys
+import platform
+from typing import Callable
 
 import click
 
@@ -9,18 +11,28 @@ from zedenv.lib.logger import ZELogger
 import zedenv.lib.check
 
 
-def get_bootloader(boot_environment, verbose, bootloader, legacy):
+def get_bootloader(boot_environment: str,
+                   verbose: bool,
+                   bootloader: str,
+                   legacy: bool):
     bootloader_plugin = None
     if bootloader:
         plugins = zedenv.lib.configure.get_plugins()
         if bootloader in plugins:
                 ZELogger.verbose_log({
                     "level": "INFO",
-                    "message": "Configuring boot environment "
-                               f"bootloader with {bootloader}\n"
+                    "message": ("Configuring boot environment "
+                                f"bootloader with {bootloader}\n")
                 }, verbose)
-                bootloader_plugin = plugins[bootloader](
-                    boot_environment, verbose, bootloader, legacy)
+                if platform.system().lower() in plugins[bootloader].systems_allowed:
+                    bootloader_plugin = plugins[bootloader](
+                        boot_environment, verbose, bootloader, legacy)
+                else:
+                    ZELogger.log({
+                        "level": "EXCEPTION",
+                        "message": (f"The plugin {bootloader} is "
+                                    f"not valid for {platform.system().lower()}\n")
+                    }, exit_on_error=True)
         else:
             ZELogger.log({
                 "level": "EXCEPTION",
@@ -31,7 +43,10 @@ def get_bootloader(boot_environment, verbose, bootloader, legacy):
     return bootloader_plugin
 
 
-def zedenv_activate(boot_environment, verbose, bootloader, legacy):
+def zedenv_activate(boot_environment: str,
+                    verbose: bool,
+                    bootloader: str,
+                    legacy: bool):
     """
     :Parameters:
       boot_environment : str
@@ -51,7 +66,6 @@ def zedenv_activate(boot_environment, verbose, bootloader, legacy):
 
     if bootloader_plugin is not None:
         bootloader_plugin.activate()
-
 
 @click.command(name="activate",
                help="Activate a boot environment.")
