@@ -5,12 +5,10 @@ import platform
 from typing import Optional
 import click
 
-import pyzfsutils.system.agnostic
-
 import zedenv.lib.be
 import zedenv.lib.configure
-from zedenv.lib.logger import ZELogger
 import zedenv.lib.check
+from zedenv.lib.logger import ZELogger
 
 
 def get_bootloader(boot_environment: str,
@@ -70,6 +68,11 @@ def zedenv_activate(boot_environment: str,
         ZELogger.verbose_log({
             "level": "INFO",
             "message": f"Boot Environment {boot_environment} is already active.\n"
+        }, verbose)
+    else:
+        ZELogger.verbose_log({
+            "level": "INFO",
+            "message": f"Boot Environment {boot_environment} is not already active.\n"
         }, verbose)
 
 

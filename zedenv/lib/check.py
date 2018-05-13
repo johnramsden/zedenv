@@ -7,22 +7,33 @@ import pyzfsutils.check
 import pyzfsutils.system.agnostic
 
 
-def startup_check_bootfs(zpool: str) -> list:
-    """
-    Checks if system is supported and has a bootfs set
-    """
+def bootfs_for_pool(zpool: str) -> str:
     bootfs_list = None
     try:
         bootfs_list = pyzfsutils.cmd.zpool_get(pool=zpool,
                                                scripting=True,
                                                properties=["bootfs"],
-                                               columns=["name", "value"])
+                                               columns=["value"])
     except RuntimeError as err:
         raise
 
-    bootfs = [i.split() for i in bootfs_list.splitlines() if i.split()[1] != "-"]
+    bootfs = [i.split()[0] for i in bootfs_list.splitlines() if i.split()[0] != "-"]
     if not bootfs:
         raise RuntimeError("No bootfs has been set on zpool")
+
+    return bootfs[0]
+
+
+def startup_check_bootfs(zpool: str) -> str:
+    """
+    Checks if system is supported and has a bootfs set
+    Returns bootfs for specified pool
+    """
+    bootfs = None
+    try:
+        bootfs = bootfs_for_pool(zpool)
+    except RuntimeError as err:
+        raise
 
     return bootfs
 

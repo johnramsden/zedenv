@@ -115,15 +115,14 @@ def pool(mount_dataset: str = "/") -> Optional[str]:
 
 def is_current_boot_environment(boot_environment: str) -> bool:
     root_dataset = pyzfsutils.system.agnostic.mountpoint_dataset("/")
+
     be_root = root()
-
-    if be_root is None:
-        return False
-
-    if not (root_dataset == "/".join([be_root, boot_environment])):
+    if be_root is None or not (root_dataset == "/".join([be_root, boot_environment])):
         return False
 
     return zedenv.lib.check.startup_check_bootfs(pool()) == root_dataset
+
+
 
 
 def list_boot_environments(target: str, columns: list) -> list:
