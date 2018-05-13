@@ -6,7 +6,7 @@ import click
 
 import pyzfsutils.utility as zfs_utility
 
-import zedenv.lib.boot_environment as be
+import zedenv.lib.be
 import zedenv.lib.check
 from zedenv.lib.logger import ZELogger
 
@@ -27,7 +27,7 @@ def configure_boot_environment_list(be_root, columns: list, scripting) -> list:
     Converts a list of boot environments with their properties to be printed
     to a list of column separated strings.
     """
-    boot_environments = be.list_boot_environments(be_root, columns)
+    boot_environments = zedenv.lib.be.list_boot_environments(be_root, columns)
 
     unformatted_boot_environments = list()
 
@@ -107,4 +107,9 @@ def cli(verbose, alldatasets, spaceused, scripting, snapshots):
     except RuntimeError as err:
         sys.exit(err)
 
-    zedenv_list(verbose, alldatasets, spaceused, scripting, snapshots, be.root())
+    zedenv_list(verbose,
+                alldatasets,
+                spaceused,
+                scripting,
+                snapshots,
+                zedenv.lib.be.root())

@@ -4,11 +4,9 @@ zedenv boot environment manager cli
 import os
 import signal
 import sys
+import platform
 
 import click
-
-import pyzfsutils.cmd
-import pyzfsutils.check
 
 import zedenv
 import zedenv.lib.check
@@ -32,7 +30,8 @@ def list_plugins(ctx, param, value):
 
     click.echo("Loaded plugins:")
     for key, value in plugins.items():
-        click.echo(key)
+        if platform.system().lower() in plugins[key].systems_allowed:
+            click.echo(key)
 
     ctx.exit()
 

@@ -2,10 +2,12 @@
 
 import sys
 import platform
-from typing import Callable
-
+from typing import Optional
 import click
 
+import pyzfsutils.system.agnostic
+
+import zedenv.lib.be
 import zedenv.lib.configure
 from zedenv.lib.logger import ZELogger
 import zedenv.lib.check
@@ -44,16 +46,13 @@ def get_bootloader(boot_environment: str,
 
 
 def zedenv_activate(boot_environment: str,
-                    verbose: bool,
-                    bootloader: str,
-                    legacy: bool):
+                    verbose: Optional[bool],
+                    bootloader: Optional[str],
+                    legacy: Optional[bool]):
+
     """
-    :Parameters:
-      boot_environment : str
-        Name of boot environment to activate
-      verbose : bool
-        Print information verbosely.
-    :return:
+    If a plugin is found that can be run on the system,
+    run the activate command from the plugin.
     """
 
     bootloader_plugin = get_bootloader(
@@ -66,6 +65,13 @@ def zedenv_activate(boot_environment: str,
 
     if bootloader_plugin is not None:
         bootloader_plugin.activate()
+
+    if zedenv.lib.be.is_current_boot_environment(boot_environment):
+        ZELogger.verbose_log({
+            "level": "INFO",
+            "message": f"Boot Environment {boot_environment} is already active.\n"
+        }, verbose)
+
 
 @click.command(name="activate",
                help="Activate a boot environment.")

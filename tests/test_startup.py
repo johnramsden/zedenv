@@ -6,7 +6,7 @@ import pyzfsutils.check
 
 import zedenv.main
 import zedenv.lib.check
-import zedenv.lib.boot_environment
+import zedenv.lib.be
 
 from click.testing import CliRunner
 

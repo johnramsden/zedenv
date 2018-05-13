@@ -3,6 +3,7 @@ Functions for common boot environment tasks
 """
 
 import datetime
+from typing import Optional
 
 import pyzfsutils.check
 import pyzfsutils.cmd
@@ -10,6 +11,7 @@ import pyzfsutils.system.agnostic
 import pyzfsutils.utility as zfs_utility
 
 from zedenv.lib.logger import ZELogger
+import zedenv.lib.check
 
 """
 # TODO: Normalize based on size suffix.
@@ -91,14 +93,37 @@ def snapshot(boot_environment_name, boot_environment_root, snap_prefix="zedenv")
     return snap_suffix
 
 
-def root(mount_dataset: str = "/") -> str:
-    return zfs_utility.dataset_parent(
-        pyzfsutils.system.agnostic.mountpoint_dataset(mount_dataset))
+def root(mount_dataset: str = "/") -> Optional[str]:
+    """
+    Root of boot environment datasets, e.g. zpool/ROOT
+    """
+    mountpoint_dataset = pyzfsutils.system.agnostic.mountpoint_dataset(mount_dataset)
+    if mountpoint_dataset is None:
+        return None
+
+    return zfs_utility.dataset_parent(mountpoint_dataset)
 
 
-def pool(mount_dataset: str = "/") -> str:
-    return pyzfsutils.system.agnostic.mountpoint_dataset(
-                                                mount_dataset).split("/")[0]
+def pool(mount_dataset: str = "/") -> Optional[str]:
+
+    mountpoint_dataset = pyzfsutils.system.agnostic.mountpoint_dataset(mount_dataset)
+    if mountpoint_dataset is None:
+        return None
+
+    return mountpoint_dataset.split("/")[0]
+
+
+def is_current_boot_environment(boot_environment: str) -> bool:
+    root_dataset = pyzfsutils.system.agnostic.mountpoint_dataset("/")
+    be_root = root()
+
+    if be_root is None:
+        return False
+
+    if not (root_dataset == "/".join([be_root, boot_environment])):
+        return False
+
+    return zedenv.lib.check.startup_check_bootfs(pool()) == root_dataset
 
 
 def list_boot_environments(target: str, columns: list) -> list:

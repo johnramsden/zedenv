@@ -4,7 +4,7 @@ Startup checks
 
 import pyzfsutils.cmd
 import pyzfsutils.check
-import zedenv.lib.boot_environment as be
+import pyzfsutils.system.agnostic
 
 
 def startup_check_bootfs(zpool: str) -> list:
@@ -35,6 +35,7 @@ def startup_check():
             f"System is not booting off a ZFS root dataset.\n{err}\n")
 
     try:
-        startup_check_bootfs(be.pool())
+        startup_check_bootfs(
+            pyzfsutils.system.agnostic.mountpoint_dataset("/").split("/")[0])
     except RuntimeError as err:
         raise RuntimeError(f"Couldn't get bootfs property of pool.\n{err}\n")
