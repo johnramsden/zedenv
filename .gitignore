@@ -48,6 +48,7 @@ doc/build
 
 # virtualenv
 venv/
+.venv/
 
 # IDE files
 .idea/
