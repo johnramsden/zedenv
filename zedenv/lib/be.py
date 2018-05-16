@@ -123,8 +123,6 @@ def is_current_boot_environment(boot_environment: str) -> bool:
     return zedenv.lib.check.startup_check_bootfs(pool()) == root_dataset
 
 
-
-
 def list_boot_environments(target: str, columns: list) -> list:
     """
     TODO:

@@ -13,3 +13,6 @@ class SystemdBoot:
 
     def activate(self):
         return f"Registered systemdboot plugin for boot env: {self.boot_environment}"
+
+    def bootloader_modify(self):
+        return f"Activated {self.bootloader} plugin for boot env: {self.boot_environment}"

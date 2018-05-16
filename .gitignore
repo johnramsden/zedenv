@@ -50,6 +50,9 @@ doc/build
 venv/
 .venv/
 
+Pipfile
+Pipfile.lock
+
 # IDE files
 .idea/
 .vscode/
