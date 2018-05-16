@@ -36,7 +36,7 @@ def size(boot_environment) -> int:
 """
 
 
-def properties(dataset, appended_properties: list) -> list:
+def properties(dataset, appended_properties: Optional[list]) -> list:
     dataset_properties = None
     try:
         dataset_properties = pyzfsutils.cmd.zfs_get(dataset,
@@ -53,12 +53,13 @@ def properties(dataset, appended_properties: list) -> list:
     Take each line of output containing properties and convert
     it to a list of property=value strings
     """
-    property_list = ["=".join(line.split()) for line in dataset_properties.splitlines()]
-    for p in appended_properties:
-        if p not in property_list:
-            property_list.append(p)
+    dp = [line.split() for line in dataset_properties.splitlines()]
+    remove_props = [rp[0] for rp in appended_properties]
+    used_props = ["=".join(p) for p in dp if p[0] not in remove_props]
 
-    return property_list
+    used_props.extend(["=".join(pa) for pa in appended_properties])
+
+    return used_props
 
 
 def snapshot(boot_environment_name, boot_environment_root, snap_prefix="zedenv"):
@@ -111,6 +112,10 @@ def pool(mount_dataset: str = "/") -> Optional[str]:
         return None
 
     return mountpoint_dataset.split("/")[0]
+
+
+def dataset_pool(dataset: str) -> Optional[str]:
+    return dataset.split("/")[0] if dataset is not None else None
 
 
 def is_current_boot_environment(boot_environment: str) -> bool:

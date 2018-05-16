@@ -15,7 +15,7 @@ from zedenv.lib.logger import ZELogger
 def get_clones(dataset_source, existing) -> list:
     parent_dataset = zfs_utility.dataset_parent(dataset_source)
 
-    clone_data = list()
+    clone_data = []
     if existing:
         if zfs_utility.is_snapshot(existing):
             snap_suffix = existing.rsplit('@', 1)[-1]
@@ -49,9 +49,11 @@ def get_clones(dataset_source, existing) -> list:
                 child = ""
             else:
                 child = zfs_utility.dataset_child_name(c)
+            clone_props = zedenv.lib.be.properties(
+                c, [["canmount", "off"]])
             clone_data.append({
                 "snapshot": f"{c}@{snap_suffix}",
-                "properties": zedenv.lib.be.properties(c, ["canmount=off"]),
+                "properties": clone_props,
                 "datasetchild": child
             })
         else:

@@ -1,11 +1,10 @@
 """List boot environments cli"""
 
-import os
 import sys
 import platform
 import tempfile
 
-from typing import Optional, Callable
+from typing import Optional, List
 
 import click
 
@@ -55,42 +54,41 @@ def get_bootloader(boot_environment: str,
 
 def mount_and_modify_dataset(dataset: str,
                              verbose: bool = False,
+                             pre_mount_properties: List[str] = None,
+                             post_mount_properties: List[str] = None,
                              plugin=None):
-    try:
-        pyzfsutils.cmd.zfs_set(dataset, "canmount=noauto")
-    except RuntimeError as e:
-        ZELogger.log({
-            "level": "EXCEPTION",
-            "message": f"Failed to set canmount=noauto on {e}\n"
-        }, exit_on_error=True)
+    if pre_mount_properties:
+        for pre_prop in pre_mount_properties:
+            try:
+                pyzfsutils.cmd.zfs_set(dataset, pre_prop)
+            except RuntimeError as e:
+                ZELogger.log({
+                    "level": "EXCEPTION",
+                    "message": f"Failed to set {pre_prop} on {dataset}\n{e}\n"
+                }, exit_on_error=True)
 
     with tempfile.TemporaryDirectory() as tmpdir:
         try:
             pyzfsutils.cmd.zfs_set(dataset, f"mountpoint={tmpdir}")
         except RuntimeError as e:
             ZELogger.log({
-                "level": "EXCEPTION",
-                "message": f"Failed to set mountpoint={tmpdir}\n{e}\n"
+                "level": "EXCEPTION", "message": f"Failed to set mountpoint={tmpdir}\n{e}\n"
             }, exit_on_error=True)
 
         try:
             pyzfsutils.cmd.zfs_mount(dataset)
         except RuntimeError as e:
             ZELogger.log({
-                "level": "EXCEPTION",
-                "message": f"Failed to set mountpoint={tmpdir}\n{e}\n"
+                "level": "EXCEPTION", "message": f"Failed to mount mountpoint={dataset}\n{e}\n"
             }, exit_on_error=True)
 
-        ZELogger.verbose_log({
-            "level": "INFO",
-            "message": f"Mounted {dataset} to {tmpdir}\n"
-        }, verbose)
+        ZELogger.verbose_log(
+            {"level": "INFO", "message": f"Mounted {dataset} to {tmpdir}\n"}, verbose)
 
         # Do stuff while mounted
         if plugin is not None:
             ZELogger.verbose_log({
-                "level": "INFO",
-                "message": f"Ran plugin:\n{plugin.bootloader_modify()}\n"
+                "level": "INFO", "message": f"Ran plugin:\n{plugin.bootloader_modify()}\n"
             }, verbose)
 
             # TODO
@@ -102,10 +100,70 @@ def mount_and_modify_dataset(dataset: str,
                 "level": "EXCEPTION",
                 "message": f"Failed to unmount {dataset} from {tmpdir}\n{e}\n"
             }, exit_on_error=True)
+        ZELogger.verbose_log(
+            {"level": "INFO", "message": f"Unmounted {dataset} from {tmpdir}\n"}, verbose)
+
+    if post_mount_properties:
+        for post_prop in post_mount_properties:
+            try:
+                pyzfsutils.cmd.zfs_set(dataset, post_prop)
+            except RuntimeError as e:
+                ZELogger.log({
+                    "level": "EXCEPTION",
+                    "message": f"Failed to set {post_prop} on {dataset}\n{e}\n"
+                }, exit_on_error=True)
+
+
+def activate_boot_environment(be_requested: str,
+                              dataset_mountpoint: Optional[str],
+                              verbose: Optional[bool],
+                              bootloader_plugin):
+    if dataset_mountpoint and dataset_mountpoint != "/":
         ZELogger.verbose_log({
             "level": "INFO",
-            "message": f"Unmounted {dataset} from {tmpdir}\n"
+            "message": f"Unmounting {dataset_mountpoint}.\n"
         }, verbose)
+
+        try:
+            zedenv.lib.system.umount(dataset_mountpoint)
+        except RuntimeError as e:
+            ZELogger.log({
+                "level": "EXCEPTION",
+                "message": f"Failed unmounting dataset {boot_environment}\n{e}\n"
+            }, exit_on_error=True)
+
+        mount_and_modify_dataset(be_requested,
+                                 pre_mount_properties=["canmount=noauto"],
+                                 post_mount_properties=["mountpoint=/"],
+                                 verbose=verbose,
+                                 plugin=bootloader_plugin)
+
+    try:
+        pyzfsutils.cmd.zpool_set(zedenv.lib.be.dataset_pool(be_requested),
+                                 f"bootfs={be_requested}")
+    except RuntimeError as e:
+        ZELogger.log({
+            "level": "EXCEPTION", "message": f"Failed to set bootfs to {be_requested}\n{e}\n"
+        }, exit_on_error=True)
+
+
+def disable_children_automount(be_child_datasets: List[str],
+                               be_requested: str,
+                               boot_environment_root: str,
+                               verbose: Optional[bool]):
+    ZELogger.verbose_log({"level": "INFO", "message": f"Found BE datasets:\n"}, verbose)
+    for ds in be_child_datasets:
+        ZELogger.verbose_log({"level": "INFO", "message": f"{ds}\n"}, verbose)
+        if not (be_requested in ds) and not (boot_environment_root == ds):
+            ZELogger.verbose_log({"level": "INFO",
+                                  "message": f"Disabling automount for {ds}\n"}, verbose)
+            try:
+                pyzfsutils.cmd.zfs_set(ds, "canmount=noauto")
+            except RuntimeError as e:
+                ZELogger.log({
+                    "level": "EXCEPTION",
+                    "message": f"Failed to set canmount=noauto on {ds}\n{e}\n"
+                }, exit_on_error=True)
 
 
 def zedenv_activate(boot_environment: str,
@@ -148,36 +206,48 @@ def zedenv_activate(boot_environment: str,
         }, verbose)
     else:
         dataset_mountpoint = pyzfsutils.system.agnostic.dataset_mountpoint(be_requested)
-        if dataset_mountpoint:
-            ZELogger.verbose_log({
-                "level": "INFO",
-                "message": f"Boot Environment is mounted at {dataset_mountpoint}.\n"
-            }, verbose)
-            if dataset_mountpoint == "/":
-                ZELogger.verbose_log({
-                    "level": "INFO",
-                    "message": f"Since dataset is current root, do not unmount.\n"
-                }, verbose)
-            else:
-                ZELogger.verbose_log({
-                    "level": "INFO",
-                    "message": f"Unmounting {dataset_mountpoint}.\n"
-                }, verbose)
+        activate_boot_environment(be_requested, dataset_mountpoint, verbose, bootloader_plugin)
 
+    be_child_datasets = None
+    try:
+        be_child_datasets = pyzfsutils.cmd.zfs_list(boot_environment_root,
+                                                    recursive=True,
+                                                    columns=["name"],
+                                                    zfs_types=["filesystem"])
+    except RuntimeError as e:
+        ZELogger.log({
+            "level": "EXCEPTION",
+            "message": f"Failed to list datasets under {boot_environment_root}\n{e}\n"
+        }, exit_on_error=True)
+
+    be_child_datasets_list = [line for line in be_child_datasets.splitlines()]
+    disable_children_automount(be_child_datasets_list,
+                               be_requested,
+                               boot_environment_root,
+                               verbose)
+
+    # TODO: Should this be noauto?
+    canmount_setting = "canmount=on"
+    for ds in be_child_datasets_list:
+        if be_requested in ds:
+            try:
+                pyzfsutils.cmd.zfs_set(ds, canmount_setting)
+            except RuntimeError:
+                ZELogger.log({
+                    "level": "EXCEPTION",
+                    "message": f"Failed to set {canmount_setting} for {ds}\n{e}\n"
+                }, exit_on_error=True)
+
+            if pyzfsutils.utility.is_clone(ds):
                 try:
-                    zedenv.lib.system.umount(dataset_mountpoint)
-                except RuntimeError as e:
+                    pyzfsutils.cmd.zfs_promote(ds)
+                except RuntimeError:
                     ZELogger.log({
                         "level": "EXCEPTION",
-                        "message": f"Failed unmounting dataset {boot_environment}\n{e}\n"
+                        "message": f"Failed to promote BE {ds}\n{e}\n"
                     }, exit_on_error=True)
-        else:
-            ZELogger.verbose_log({
-                "level": "INFO", "message": f"Boot Environment isn't mounted.\n"}, verbose)
-
-        mount_and_modify_dataset(be_requested,
-                                 verbose=verbose,
-                                 plugin=bootloader_plugin)
+                ZELogger.verbose_log(
+                    {"level": "INFO", "message": f"Promoted {ds}.\n"}, verbose)
 
 
 @click.command(name="activate",
