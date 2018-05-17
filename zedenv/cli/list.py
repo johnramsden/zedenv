@@ -29,14 +29,15 @@ def configure_boot_environment_list(be_root, columns: list, scripting) -> list:
     """
     boot_environments = zedenv.lib.be.list_boot_environments(be_root, columns)
 
-    unformatted_boot_environments = list()
+    unformatted_boot_environments = []
 
     # Set minimum column width to name of column plus one
     widths = [len(l)+1 for l in columns]
 
     for env in boot_environments:
         if not zfs_utility.is_snapshot(env[0]):
-            boot_env = [zfs_utility.dataset_child_name(env[0])] + env[1:]
+            origin = f'@{env[1].split("@")[1]}' if zfs_utility.is_snapshot(env[1]) else env[1]
+            boot_env = [zfs_utility.dataset_child_name(env[0])] + [origin] + env[2:]
             unformatted_boot_environments.append(boot_env)
 
     # Check for largest column entry and use as width.
@@ -45,7 +46,7 @@ def configure_boot_environment_list(be_root, columns: list, scripting) -> list:
             if len(w) > widths[i]:
                 widths[i] = len(w)
 
-    formatted_boot_environments = list()
+    formatted_boot_environments = []
 
     if not scripting:
         formatted_boot_environments.append(format_boot_environment(columns, scripting, widths))

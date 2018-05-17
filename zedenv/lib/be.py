@@ -80,11 +80,12 @@ def snapshot(boot_environment_name, boot_environment_root, snap_prefix="zedenv")
 
     dataset_name = f"{boot_environment_root}/{boot_environment_name}"
 
-    snap_suffix = "{prefix}-{suffix}".format(prefix=snap_prefix,
-                                             suffix=datetime.datetime.now().isoformat())
+    snap_suffix = datetime.datetime.now().strftime('ze-%Y-%m-%d-%H-%f')
 
     try:
-        pyzfsutils.cmd.zfs_snapshot(dataset_name, snap_suffix, recursive=True)
+        pyzfsutils.cmd.zfs_snapshot(dataset_name,
+                                    snap_suffix,
+                                    recursive=True)
     except RuntimeError:
         ZELogger.log({
             "level": "EXCEPTION",
