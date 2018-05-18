@@ -29,7 +29,11 @@ script:
   - |
     sudo env "PATH=$PATH" \
          pytest --cov=zedenv tests \
-                               --zpool="${TEST_POOL}" \
-                               --root-dataset="${TEST_POOL}/ROOT/default"
+                           --zpool="${TEST_POOL}" \
+                           --root-dataset="${TEST_POOL}/ROOT/default" \
+                           --zfs-version="$(modinfo zfs | grep -iw version | awk '{print $2}')"
 
-after_script: sudo env "PATH=$PATH" pytest --pep8
+after_script:
+  - modinfo zfs | grep -iw version
+  - modinfo spl | grep -iw version
+  - sudo env "PATH=$PATH" pytest --pep8

@@ -3,14 +3,16 @@
 import datetime
 
 import pytest
-import pyzfsutils.utility as zfs_utility
+import pyzfscmds.utility as zfs_utility
 
 import zedenv.cli.create
 import zedenv.cli.list
 
+require_zfs_version = pytest.mark.require_zfs_version
 require_root_dataset = pytest.mark.require_root_dataset
 
 
+@require_zfs_version
 @require_root_dataset
 def test_boot_environment_listed(root_dataset, capsys):
     parent_dataset = zfs_utility.dataset_parent(root_dataset)

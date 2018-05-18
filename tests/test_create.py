@@ -3,7 +3,7 @@
 import datetime
 
 import pytest
-import pyzfsutils.utility as zfs_utility
+import pyzfscmds.utility as zfs_utility
 
 import zedenv.cli.create
 import zedenv.lib.check

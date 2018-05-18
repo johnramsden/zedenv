@@ -3,9 +3,9 @@
 import sys
 
 import click
-import pyzfsutils.cmd
-import pyzfsutils.system.agnostic
-import pyzfsutils.utility as zfs_utility
+import pyzfscmds.cmd
+import pyzfscmds.system.agnostic
+import pyzfscmds.utility as zfs_utility
 
 import zedenv.lib.be
 import zedenv.lib.check
@@ -31,7 +31,7 @@ def get_clones(dataset_source, existing) -> list:
 
     clones = None
     try:
-        clones = pyzfsutils.cmd.zfs_list(list_dataset, recursive=True, columns=["name"])
+        clones = pyzfscmds.cmd.zfs_list(list_dataset, recursive=True, columns=["name"])
     except RuntimeError as e:
         ZELogger.log({
             "level": "EXCEPTION",
@@ -118,7 +118,7 @@ def zedenv_create(parent_dataset, root_dataset, boot_environment, verbose, exist
             be_clone = f"{boot_environment_dataset}/{source['datasetchild']}"
 
         try:
-            pyzfsutils.cmd.zfs_clone(source['snapshot'], be_clone, properties=source['properties'])
+            pyzfscmds.cmd.zfs_clone(source['snapshot'], be_clone, properties=source['properties'])
         except RuntimeError as e:
             ZELogger.log({
                 "level": "EXCEPTION",
@@ -142,7 +142,7 @@ def cli(boot_environment, verbose, existing):
         sys.exit(err)
 
     parent_dataset = zedenv.lib.be.root()
-    root_dataset = pyzfsutils.system.agnostic.mountpoint_dataset("/")
+    root_dataset = pyzfscmds.system.agnostic.mountpoint_dataset("/")
 
     zedenv_create(parent_dataset, root_dataset,
                   boot_environment, verbose, existing)

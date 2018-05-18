@@ -2,18 +2,18 @@
 Startup checks
 """
 
-import pyzfsutils.cmd
-import pyzfsutils.check
-import pyzfsutils.system.agnostic
+import pyzfscmds.check
+import pyzfscmds.cmd
+import pyzfscmds.system.agnostic
 
 
 def bootfs_for_pool(zpool: str) -> str:
     bootfs_list = None
     try:
-        bootfs_list = pyzfsutils.cmd.zpool_get(pool=zpool,
-                                               scripting=True,
-                                               properties=["bootfs"],
-                                               columns=["value"])
+        bootfs_list = pyzfscmds.cmd.zpool_get(pool=zpool,
+                                              scripting=True,
+                                              properties=["bootfs"],
+                                              columns=["value"])
     except RuntimeError as err:
         raise
 
@@ -40,13 +40,13 @@ def startup_check_bootfs(zpool: str) -> str:
 
 def startup_check():
     try:
-        pyzfsutils.check.is_root_on_zfs()
+        pyzfscmds.check.is_root_on_zfs()
     except RuntimeError as err:
         raise RuntimeError(
             f"System is not booting off a ZFS root dataset.\n{err}\n")
 
     try:
         startup_check_bootfs(
-            pyzfsutils.system.agnostic.mountpoint_dataset("/").split("/")[0])
+            pyzfscmds.system.agnostic.mountpoint_dataset("/").split("/")[0])
     except RuntimeError as err:
         raise RuntimeError(f"Couldn't get bootfs property of pool.\n{err}\n")

@@ -16,7 +16,7 @@ dev_require = [
 ]
 
 dependency_links = [
-     'git+ssh://git@github.com/johnramsden/pyzfsutils.git#egg=pyzfsutils'
+     'git+ssh://git@github.com/johnramsden/pyzfscmds.git#egg=pyzfscmds'
 ]
 
 
@@ -28,11 +28,11 @@ def readme():
 # Install all with:
 # pip install -e .
 # pip install '.[dev]' '.[test]' \
-# --process-dependency-links git+ssh://git@github.com/johnramsden/pyzfsutils.git#egg=pyzfsutils
+# --process-dependency-links git+ssh://git@github.com/johnramsden/pyzfscmds.git#egg=pyzfscmds
 setup(
     name='zedenv',
     version=__version__,
-    description='ZFS boot environment manager',
+    description='Utility to manage Boot Environments using ZFS',
     long_description=readme(),
     url='http://github.com/johnramsden/zedenv',
     author='John Ramsden',
@@ -45,7 +45,7 @@ setup(
     ],
     keywords='cli',
     packages=find_packages(),
-    install_requires=['click', 'pyzfsutils'],
+    install_requires=['click', 'pyzfscmds'],
     setup_requires=['pytest-runner'],
     dependency_links=dependency_links,
     tests_require=tests_require,

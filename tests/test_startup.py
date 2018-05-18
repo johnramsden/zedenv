@@ -1,8 +1,8 @@
 """Test zedenv setup"""
 
 import pytest
-import pyzfsutils.cmd
-import pyzfsutils.check
+import pyzfscmds.cmd
+import pyzfscmds.check
 
 import zedenv.main
 import zedenv.lib.check
@@ -19,11 +19,11 @@ require_root_dataset = pytest.mark.require_root_dataset
 @pytest.fixture(scope="function")
 def set_bootfs_failure(request, zpool, root_dataset):
     print("bootfs setup:")
-    pyzfsutils.cmd.zpool_set(zpool, 'bootfs=')
+    pyzfscmds.cmd.zpool_set(zpool, 'bootfs=')
 
     def fin():
         print("Re-set bootfs teardown")
-        pyzfsutils.cmd.zpool_set(zpool, f'bootfs={root_dataset}')
+        pyzfscmds.cmd.zpool_set(zpool, f'bootfs={root_dataset}')
 
     request.addfinalizer(fin)
     return set_bootfs_failure
@@ -38,7 +38,7 @@ def check_startup(zpool, set_bootfs_failure):
 @require_zpool
 def test_boot_no_bootfs():
     try:
-        exit_val = pyzfsutils.check.is_root_on_zfs()
+        exit_val = pyzfscmds.check.is_root_on_zfs()
     except RuntimeError:
         exit_val = False
 

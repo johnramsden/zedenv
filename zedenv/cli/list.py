@@ -4,7 +4,8 @@ import sys
 
 import click
 
-import pyzfsutils.utility as zfs_utility
+import pyzfscmds.utility as zfs_utility
+import pyzfscmds.system.agnostic
 
 import zedenv.lib.be
 import zedenv.lib.check
@@ -29,6 +30,8 @@ def configure_boot_environment_list(be_root, columns: list, scripting) -> list:
     """
     boot_environments = zedenv.lib.be.list_boot_environments(be_root, columns)
 
+    columns.insert(1, "active")
+
     unformatted_boot_environments = []
 
     # Set minimum column width to name of column plus one
@@ -37,8 +40,16 @@ def configure_boot_environment_list(be_root, columns: list, scripting) -> list:
     for env in boot_environments:
         if not zfs_utility.is_snapshot(env[0]):
             origin = f'@{env[1].split("@")[1]}' if zfs_utility.is_snapshot(env[1]) else env[1]
-            boot_env = [zfs_utility.dataset_child_name(env[0])] + [origin] + env[2:]
-            unformatted_boot_environments.append(boot_env)
+            active = ""
+            if pyzfscmds.system.agnostic.mountpoint_dataset("/") == env[0]:
+                active = "N"
+
+            if zedenv.lib.check.bootfs_for_pool(
+                    zedenv.lib.be.dataset_pool(env[0])) == env[0]:
+                active += "R"
+
+            unformatted_boot_environments.append(
+                [zfs_utility.dataset_child_name(env[0])] + [active] + [origin] + env[2:])
 
     # Check for largest column entry and use as width.
     for ube in unformatted_boot_environments:

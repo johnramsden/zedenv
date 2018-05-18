@@ -3,15 +3,14 @@ Functions for common boot environment tasks
 """
 
 import datetime
+import pyzfscmds.check
+import pyzfscmds.cmd
+import pyzfscmds.system.agnostic
+import pyzfscmds.utility as zfs_utility
 from typing import Optional
 
-import pyzfsutils.check
-import pyzfsutils.cmd
-import pyzfsutils.system.agnostic
-import pyzfsutils.utility as zfs_utility
-
-from zedenv.lib.logger import ZELogger
 import zedenv.lib.check
+from zedenv.lib.logger import ZELogger
 
 """
 # TODO: Normalize based on size suffix.
@@ -28,7 +27,7 @@ def size(boot_environment) -> int:
     # 60f8d4de7b0a0a59360f631816d36cfefcc86b75/beadm#L389-L421
 
     if not zfs_utility.is_clone(boot_environment):
-        used = pyzfsutils.cmd.zfs_get(boot_environment,
+        used = pyzfscmds.cmd.zfs_get(boot_environment,
                        properties=["used"],
                        columns=["value"])
 
@@ -39,10 +38,10 @@ def size(boot_environment) -> int:
 def properties(dataset, appended_properties: Optional[list]) -> list:
     dataset_properties = None
     try:
-        dataset_properties = pyzfsutils.cmd.zfs_get(dataset,
-                                                    columns=["property", "value"],
-                                                    source=["local", "received"],
-                                                    properties=["all"])
+        dataset_properties = pyzfscmds.cmd.zfs_get(dataset,
+                                                   columns=["property", "value"],
+                                                   source=["local", "received"],
+                                                   properties=["all"])
     except RuntimeError:
         ZELogger.log({
             "level": "EXCEPTION",
@@ -83,9 +82,9 @@ def snapshot(boot_environment_name, boot_environment_root, snap_prefix="zedenv")
     snap_suffix = datetime.datetime.now().strftime('ze-%Y-%m-%d-%H-%f')
 
     try:
-        pyzfsutils.cmd.zfs_snapshot(dataset_name,
-                                    snap_suffix,
-                                    recursive=True)
+        pyzfscmds.cmd.zfs_snapshot(dataset_name,
+                                   snap_suffix,
+                                   recursive=True)
     except RuntimeError:
         ZELogger.log({
             "level": "EXCEPTION",
@@ -99,7 +98,7 @@ def root(mount_dataset: str = "/") -> Optional[str]:
     """
     Root of boot environment datasets, e.g. zpool/ROOT
     """
-    mountpoint_dataset = pyzfsutils.system.agnostic.mountpoint_dataset(mount_dataset)
+    mountpoint_dataset = pyzfscmds.system.agnostic.mountpoint_dataset(mount_dataset)
     if mountpoint_dataset is None:
         return None
 
@@ -107,8 +106,7 @@ def root(mount_dataset: str = "/") -> Optional[str]:
 
 
 def pool(mount_dataset: str = "/") -> Optional[str]:
-
-    mountpoint_dataset = pyzfsutils.system.agnostic.mountpoint_dataset(mount_dataset)
+    mountpoint_dataset = pyzfscmds.system.agnostic.mountpoint_dataset(mount_dataset)
     if mountpoint_dataset is None:
         return None
 
@@ -120,7 +118,7 @@ def dataset_pool(dataset: str) -> Optional[str]:
 
 
 def is_current_boot_environment(boot_environment: str) -> bool:
-    root_dataset = pyzfsutils.system.agnostic.mountpoint_dataset("/")
+    root_dataset = pyzfscmds.system.agnostic.mountpoint_dataset("/")
 
     be_root = root()
     if be_root is None or not (root_dataset == "/".join([be_root, boot_environment])):
@@ -141,10 +139,10 @@ def list_boot_environments(target: str, columns: list) -> list:
     """
     list_output = None
     try:
-        list_output = pyzfsutils.cmd.zfs_list(target, recursive=True,
-                                              zfs_types=["filesystem", "snapshot", "volume"],
-                                              sort_properties_ascending=["creation"],
-                                              columns=columns)
+        list_output = pyzfscmds.cmd.zfs_list(target, recursive=True,
+                                             zfs_types=["filesystem", "snapshot", "volume"],
+                                             sort_properties_ascending=["creation"],
+                                             columns=columns)
     except RuntimeError:
         ZELogger.log({
             "level": "EXCEPTION", "message": f"Failed to get properties of '{target}'"
