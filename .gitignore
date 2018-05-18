@@ -57,3 +57,5 @@ Pipfile.lock
 .idea/
 .vscode/
 
+/packaging/arch/*
+!packaging/arch/PKGBUILD

@@ -44,7 +44,7 @@ setup(
       'Programming Language :: Python :: 3.6',
     ],
     keywords='cli',
-    packages=find_packages(),
+    packages=find_packages(exclude=["*tests*", "test_*"]),
     install_requires=['click', 'pyzfscmds'],
     setup_requires=['pytest-runner'],
     dependency_links=dependency_links,
