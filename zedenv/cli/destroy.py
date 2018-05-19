@@ -6,6 +6,7 @@ from typing import Optional
 import click
 
 import pyzfscmds.utility as zfs_utility
+import pyzfscmds.cmd
 import pyzfscmds.system.agnostic
 
 import zedenv.lib.be
@@ -13,39 +14,58 @@ import zedenv.lib.check
 from zedenv.lib.logger import ZELogger
 
 
-def zedenv_destroy(boot_environment: str,
+def zedenv_destroy(target: str,
                    be_root: str,
                    root_dataset: str,
                    verbose: Optional[bool],
-                   unmount: Optional[bool]):
+                   unmount: Optional[bool],
+                   noconfirm: Optional[bool]):
     """
     Put actual function to be called in this separate function to allow easier testing.
     """
-    ZELogger.verbose_log({
-        "level": "INFO", "message": f"Destroying Boot Environment: '{boot_environment}'\n"
-    }, verbose)
+    boot_environment_dataset = f"{be_root}/{target}"
 
-    boot_environment_dataset = f"{be_root}/{boot_environment}"
-
-    if zedenv.lib.be.is_current_boot_environment(boot_environment):
+    if zedenv.lib.be.is_current_boot_environment(target):
         ZELogger.log({
             "level": "EXCEPTION",
-            "message": f"Cannot destroy active boot environment '{boot_environment}'."
+            "message": f"Cannot destroy active boot environment '{target}'."
         }, exit_on_error=True)
+
+    if not noconfirm:
+        click.confirm(f"Do you really want to destroy '{target}'?\n"
+                      "This action will be permanent.\n\n"
+                      f"Destroy '{boot_environment_dataset}'?\n", abort=True)
+
+    if pyzfscmds.utility.is_snapshot(boot_environment_dataset):
+        try:
+            pyzfscmds.cmd.zfs_destroy_snapshot(boot_environment_dataset)
+        except RuntimeError as e:
+            ZELogger.log({
+                "level": "EXCEPTION",
+                "message": f"Snapshot may be origin for other boot environment.\n{e}"
+            }, exit_on_error=True)
+        ZELogger.verbose_log(
+            {"level": "INFO", "message": f"Destroyed '{boot_environment_dataset}"}, verbose)
+    # else:
+    #     if pyzfscmds.utility.is_clone(boot_environment_dataset):
 
 
 @click.command(name="destroy",
-               help="Destroy a boot environment.")
+               help="Destroy a boot environment or snapshot.")
 @click.option('--verbose', '-v',
               is_flag=True,
               help="Print verbose output.")
 @click.option('--unmount', '-F',
               is_flag=True,
               help="Unmount BE automatically.")
+@click.option('--noconfirm', '-y',
+              is_flag=True,
+              help="Destroy without prompt asking for confirmation.")
 @click.argument('boot_environment')
 def cli(boot_environment: str,
         verbose: Optional[bool],
-        unmount: Optional[bool]):
+        unmount: Optional[bool],
+        noconfirm: Optional[bool]):
 
     try:
         zedenv.lib.check.startup_check()
@@ -56,4 +76,5 @@ def cli(boot_environment: str,
                    zedenv.lib.be.root(),
                    pyzfscmds.system.agnostic.mountpoint_dataset("/"),
                    verbose,
-                   unmount)
+                   unmount,
+                   noconfirm)

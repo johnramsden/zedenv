@@ -39,12 +39,14 @@ def test_boot_environment_destroyed(root_dataset, created_boot_environment):
 
     verbose = True
     unmount = False
+    noconfirm = True
 
     zedenv.cli.destroy.zedenv_destroy(created_boot_environment,
                                       parent_dataset,
                                       root_dataset,
                                       verbose,
-                                      unmount)
+                                      unmount,
+                                      noconfirm)
 
     # assert not zfs_utility.dataset_exists(f"{parent_dataset}/{created_boot_environment}")
 
@@ -61,6 +63,7 @@ def test_boot_environment_destroy_fails(root_dataset, created_boot_environment):
 
     verbose = True
     unmount = False
+    noconfirm = True
 
     zedenv.cli.activate.zedenv_activate(created_boot_environment,
                                         parent_dataset, verbose, None, False)
@@ -70,4 +73,5 @@ def test_boot_environment_destroy_fails(root_dataset, created_boot_environment):
                                           parent_dataset,
                                           root_dataset,
                                           verbose,
-                                          unmount)
+                                          unmount,
+                                          noconfirm)

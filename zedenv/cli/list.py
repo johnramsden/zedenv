@@ -44,7 +44,12 @@ def configure_boot_environment_list(be_root: str,
 
     for env in boot_environments:
         if not zfs_utility.is_snapshot(env[0]):
-            origin = f'@{env[1].split("@")[1]}' if zfs_utility.is_snapshot(env[1]) else env[1]
+            origin_list = env[1].split("@")
+            origin_ds_child = origin_list[0].rsplit('/', 1)[-1]
+            if zfs_utility.is_snapshot(env[1]):
+                origin = f'{origin_ds_child}@{origin_list[1]}'
+            else:
+                origin = env[1]
             active = ""
             if pyzfscmds.system.agnostic.mountpoint_dataset("/") == env[0]:
                 active = "N"
