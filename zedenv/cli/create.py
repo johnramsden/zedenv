@@ -2,6 +2,8 @@
 
 import sys
 
+from typing import Optional
+
 import click
 import pyzfscmds.cmd
 import pyzfscmds.system.agnostic
@@ -12,22 +14,32 @@ import zedenv.lib.check
 from zedenv.lib.logger import ZELogger
 
 
-def get_clones(dataset_source, existing) -> list:
-    parent_dataset = zfs_utility.dataset_parent(dataset_source)
+def get_clones(root_dataset: str,
+               existing: Optional[str]) -> list:
+
+    parent_dataset = zfs_utility.dataset_parent(root_dataset)
 
     clone_data = []
+    list_dataset = None  # Dataset we are listing clones under
+
     if existing:
-        if zfs_utility.is_snapshot(existing):
-            snap_suffix = existing.rsplit('@', 1)[-1]
-            list_dataset = zfs_utility.snapshot_parent_dataset(existing)
+        existing_dataset = f"{parent_dataset}/{existing}"
+        if zfs_utility.is_snapshot(existing_dataset):
+            snap_suffix = existing_dataset.rsplit('@', 1)[-1]
+            list_dataset = zfs_utility.snapshot_parent_dataset(existing_dataset)
         else:
-            snap_suffix = zedenv.lib.be.snapshot(existing,
-                                                 zfs_utility.dataset_parent(dataset_source))
-            list_dataset = existing
+            if zfs_utility.dataset_exists(existing_dataset):
+                snap_suffix = zedenv.lib.be.snapshot(existing, parent_dataset)
+                list_dataset = f"{parent_dataset}/{existing}"
+            else:
+                ZELogger.log({
+                    "level": "EXCEPTION",
+                    "message": f"The dataset {existing_dataset} doesn't exist."
+                }, exit_on_error=True)
     else:
-        snap_suffix = zedenv.lib.be.snapshot(zfs_utility.dataset_child_name(dataset_source),
+        snap_suffix = zedenv.lib.be.snapshot(zfs_utility.dataset_child_name(root_dataset),
                                              parent_dataset)
-        list_dataset = dataset_source
+        list_dataset = root_dataset
 
     clones = None
     try:
@@ -35,7 +47,7 @@ def get_clones(dataset_source, existing) -> list:
     except RuntimeError as e:
         ZELogger.log({
             "level": "EXCEPTION",
-            "message": f"Failed to list datasets under {dataset_source}."
+            "message": f"Failed to list datasets under {root_dataset}."
         }, exit_on_error=True)
 
     for c in [line for line in clones.splitlines()]:
@@ -92,24 +104,21 @@ def zedenv_create(parent_dataset, root_dataset, boot_environment, verbose, exist
         "level": "INFO", "message": "Creating Boot Environment:\n"
     }, verbose)
 
-    # Getting snapshot for clone
-    clone_sources = get_clones(root_dataset, existing)
-
     # Remove the final part of the data set after the last / and add new name
     boot_environment_dataset = f"{parent_dataset}/{boot_environment}"
-
-    ZELogger.verbose_log({
-        "level": "INFO",
-        "message": (f"Getting properties of {boot_environment_dataset}.\n"
-                    f"for clones {clone_sources}\n")
-    }, verbose)
 
     if zfs_utility.dataset_exists(boot_environment_dataset):
         ZELogger.log({
             "level": "EXCEPTION",
-            "message": (f"Failed to create {boot_environment_dataset}",
-                        f" already exists.")
+            "message": f"Failed to create {boot_environment_dataset}, already exists."
         }, exit_on_error=True)
+
+    # Getting snapshot for clone
+    clone_sources = get_clones(root_dataset, existing)
+    ZELogger.verbose_log({
+        "level": "INFO",
+        "message": f"Getting properties of {boot_environment_dataset} for clones {clone_sources}\n"
+    }, verbose)
 
     for source in clone_sources:
         if source['datasetchild'] == '':

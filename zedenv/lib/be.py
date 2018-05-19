@@ -61,12 +61,16 @@ def properties(dataset, appended_properties: Optional[list]) -> list:
     return used_props
 
 
-def snapshot(boot_environment_name, boot_environment_root, snap_prefix="zedenv"):
+def snapshot(boot_environment_name,
+             boot_environment_root,
+             snap_prefix: str = "ze",
+             snap_suffix_time_format: str = "%Y-%m-%d-%H-%f") -> str:
     """
     Recursively Snapshot BE
     :param boot_environment_name: Name of BE to snapshot.
     :param boot_environment_root: Root dataset for BEs.
     :param snap_prefix: Prefix on snapshot names.
+    :param snap_suffix_time_format: Suffix on snapshot names.
     :return: Name of snapshot without dataset.
     """
     if "/" in boot_environment_name:
@@ -79,19 +83,20 @@ def snapshot(boot_environment_name, boot_environment_root, snap_prefix="zedenv")
 
     dataset_name = f"{boot_environment_root}/{boot_environment_name}"
 
-    snap_suffix = datetime.datetime.now().strftime('ze-%Y-%m-%d-%H-%f')
+    suffix_time = datetime.datetime.now().strftime(snap_suffix_time_format)
+    full_snap_suffix = f"{snap_prefix}-{suffix_time}"
 
     try:
         pyzfscmds.cmd.zfs_snapshot(dataset_name,
-                                   snap_suffix,
+                                   full_snap_suffix,
                                    recursive=True)
     except RuntimeError:
         ZELogger.log({
             "level": "EXCEPTION",
-            "message": f"Failed to create snapshot: '{dataset_name}@{snap_suffix}'"
+            "message": f"Failed to create snapshot: '{dataset_name}@{full_snap_suffix}'"
         }, exit_on_error=True)
 
-    return snap_suffix
+    return full_snap_suffix
 
 
 def root(mount_dataset: str = "/") -> Optional[str]:
@@ -105,7 +110,7 @@ def root(mount_dataset: str = "/") -> Optional[str]:
     return zfs_utility.dataset_parent(mountpoint_dataset)
 
 
-def pool(mount_dataset: str = "/") -> Optional[str]:
+def mount_pool(mount_dataset: str = "/") -> Optional[str]:
     mountpoint_dataset = pyzfscmds.system.agnostic.mountpoint_dataset(mount_dataset)
     if mountpoint_dataset is None:
         return None
@@ -124,7 +129,7 @@ def is_current_boot_environment(boot_environment: str) -> bool:
     if be_root is None or not (root_dataset == "/".join([be_root, boot_environment])):
         return False
 
-    return zedenv.lib.check.startup_check_bootfs(pool()) == root_dataset
+    return zedenv.lib.check.startup_check_bootfs(mount_pool()) == root_dataset
 
 
 def list_boot_environments(target: str, columns: list) -> list:
