@@ -27,9 +27,7 @@ def zedenv_destroy(boot_environment: str,
 
     boot_environment_dataset = f"{be_root}/{boot_environment}"
 
-    if zedenv.lib.be.is_active_boot_environment(
-            boot_environment_dataset,
-            zedenv.lib.be.dataset_pool(boot_environment_dataset)):
+    if zedenv.lib.be.is_current_boot_environment(boot_environment):
         ZELogger.log({
             "level": "EXCEPTION",
             "message": f"Cannot destroy active boot environment '{boot_environment}'."

@@ -13,6 +13,7 @@ import zedenv.cli.activate
 require_root_dataset = pytest.mark.require_root_dataset
 require_unsafe = pytest.mark.require_unsafe
 require_zfs_version = pytest.mark.require_zfs_version
+require_root_on_zfs = pytest.mark.require_root_on_zfs
 
 
 @require_root_dataset
@@ -51,7 +52,11 @@ def test_boot_environment_destroyed(root_dataset, created_boot_environment):
 @require_unsafe
 @require_root_dataset
 @require_zfs_version
+@require_root_on_zfs
 def test_boot_environment_destroy_fails(root_dataset, created_boot_environment):
+    """
+    Wont fail if not root on ZFS
+    """
     parent_dataset = zfs_utility.dataset_parent(root_dataset)
 
     verbose = True

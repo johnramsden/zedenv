@@ -143,10 +143,11 @@ def is_current_boot_environment(boot_environment: str) -> bool:
     root_dataset = pyzfscmds.system.agnostic.mountpoint_dataset("/")
 
     be_root = root()
-    if be_root is None or not (root_dataset == "/".join([be_root, boot_environment])):
+    if be_root is None or not (root_dataset == f"{be_root}/{boot_environment}"):
         return False
 
-    return bootfs_for_pool(mount_pool()) == root_dataset
+    return is_active_boot_environment(f"{be_root}/{boot_environment}",
+                                      dataset_pool(f"{be_root}/{boot_environment}"))
 
 
 def is_active_boot_environment(boot_environment_dataset: str, zpool: str) -> bool:

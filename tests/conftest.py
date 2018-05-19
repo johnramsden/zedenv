@@ -1,5 +1,5 @@
 import pytest
-import platform
+import pyzfscmds.system.agnostic
 
 # https://github.com/zfsonlinux/zfs/commit/2a8b84b747cb27a175aa3a45b8cdb293cde31886
 zfs_support_version = '0.7.0'
@@ -47,6 +47,14 @@ def pytest_runtest_setup(item):
         if zfs_version_int(
                 item.config.getoption("--zfs-version")) < zfs_version_int(zfs_support_version):
             pytest.skip("Requires zfsonlinux > 0.7.0")
+
+    if 'require_root_on_zfs' in item.keywords:
+        zpool_ds = item.config.getoption("--zpool")
+        if not zpool_ds:
+            pytest.skip("Need --zpool option to run")
+        root_ds = pyzfscmds.system.agnostic.mountpoint_dataset("/")
+        if root_ds is None or zpool_ds not in root_ds:
+            pytest.skip("Requires root on ZFS")
 
 
 @pytest.fixture
