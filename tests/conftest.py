@@ -14,9 +14,10 @@ def zfs_version_int(version):
     # Remove patch
     version_no_patch = version.split('-')[0]
 
-    l = [int(x, 10) for x in version_no_patch.split('.')[:3]]
-    l.reverse()
-    return sum(x * (100 ** i) for i, x in enumerate(l))
+    version_list = [int(x, 10) for x in version_no_patch.split('.')[:3]]
+    version_list.reverse()
+
+    return sum(x * (100 ** i) for i, x in enumerate(version_list))
 
 
 def pytest_addoption(parser):
@@ -25,6 +26,8 @@ def pytest_addoption(parser):
 
     parser.addoption("--zpool", action="store", default=None,
                      help="Specify a pool to use.")
+
+    parser.addoption("--unsafe", action="store_true", help="Specify test 'unsafe' commands.")
 
     parser.addoption("--zfs-version", action="store", default='0.7.0',
                      help="Specify zfs version (linux).")
@@ -36,6 +39,9 @@ def pytest_runtest_setup(item):
 
     if 'require_zpool' in item.keywords and not item.config.getoption("--zpool"):
         pytest.skip("Need --zpool option to run")
+
+    if 'require_unsafe' in item.keywords and not item.config.getoption("--unsafe"):
+        pytest.skip("Need --unsafe option to run")
 
     if 'require_zfs_version' in item.keywords:
         if zfs_version_int(
@@ -56,6 +62,12 @@ def zpool(request):
 
 
 @pytest.fixture
+def unsafe(request):
+    """Specify test 'unsafe' commands."""
+    return request.config.getoption("--unsafe")
+
+
+@pytest.fixture
 def zfs_version(request):
-    """Specify a root dataset to use."""
+    """Specify zfs version."""
     return request.config.getoption("--zfs-version")

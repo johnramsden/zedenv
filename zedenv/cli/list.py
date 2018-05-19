@@ -1,6 +1,7 @@
 """List boot environments cli"""
 
 import sys
+from typing import Optional, List
 
 import click
 
@@ -12,7 +13,9 @@ import zedenv.lib.check
 from zedenv.lib.logger import ZELogger
 
 
-def format_boot_environment(be_list_line: list, scripting, widths) -> str:
+def format_boot_environment(be_list_line: list,
+                            scripting: Optional[bool],
+                            widths: List[int]) -> str:
     """
     Formats list into column separated string with tabs if scripting.
     """
@@ -23,7 +26,9 @@ def format_boot_environment(be_list_line: list, scripting, widths) -> str:
         return " ".join(fmt_line).format(*be_list_line)
 
 
-def configure_boot_environment_list(be_root, columns: list, scripting) -> list:
+def configure_boot_environment_list(be_root: str,
+                                    columns: list,
+                                    scripting: Optional[bool]) -> list:
     """
     Converts a list of boot environments with their properties to be printed
     to a list of column separated strings.
@@ -68,9 +73,14 @@ def configure_boot_environment_list(be_root, columns: list, scripting) -> list:
     return formatted_boot_environments
 
 
-def zedenv_list(verbose, all_datasets, spaceused, scripting, snapshots, be_root):
+def zedenv_list(verbose: Optional[bool],
+                alldatasets: Optional[bool],
+                spaceused: Optional[bool],
+                scripting: Optional[bool],
+                snapshots: Optional[bool],
+                be_root: str):
     """
-    But actual function to be called in this separate function to allow easier testing.
+    Main list command. Separate for testing.
     """
     ZELogger.verbose_log({
         "level": "INFO", "message": "Listing Boot Environments:\n"
@@ -113,7 +123,11 @@ def zedenv_list(verbose, all_datasets, spaceused, scripting, snapshots, be_root)
 @click.option('--snapshots', '-s',
               is_flag=True,
               help="Display snapshots.")
-def cli(verbose, alldatasets, spaceused, scripting, snapshots):
+def cli(verbose: Optional[bool],
+        alldatasets: Optional[bool],
+        spaceused: Optional[bool],
+        scripting: Optional[bool],
+        snapshots: Optional[bool]):
     try:
         zedenv.lib.check.startup_check()
     except RuntimeError as err:

@@ -29,6 +29,7 @@ script:
   - |
     sudo env "PATH=$PATH" \
          pytest --cov=zedenv tests \
+                           --unsafe \
                            --zpool="${TEST_POOL}" \
                            --root-dataset="${TEST_POOL}/ROOT/default" \
                            --zfs-version="$(modinfo zfs | grep -iw version | awk '{print $2}')"
