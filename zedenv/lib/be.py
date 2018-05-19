@@ -35,6 +35,23 @@ def size(boot_environment) -> int:
 """
 
 
+def bootfs_for_pool(zpool: str) -> str:
+    bootfs_list = None
+    try:
+        bootfs_list = pyzfscmds.cmd.zpool_get(pool=zpool,
+                                              scripting=True,
+                                              properties=["bootfs"],
+                                              columns=["value"])
+    except RuntimeError as err:
+        raise
+
+    bootfs = [i.split()[0] for i in bootfs_list.splitlines() if i.split()[0] != "-"]
+    if not bootfs:
+        raise RuntimeError("No bootfs has been set on zpool")
+
+    return bootfs[0]
+
+
 def properties(dataset, appended_properties: Optional[list]) -> list:
     dataset_properties = None
     try:
@@ -129,7 +146,11 @@ def is_current_boot_environment(boot_environment: str) -> bool:
     if be_root is None or not (root_dataset == "/".join([be_root, boot_environment])):
         return False
 
-    return zedenv.lib.check.startup_check_bootfs(mount_pool()) == root_dataset
+    return bootfs_for_pool(mount_pool()) == root_dataset
+
+
+def is_active_boot_environment(boot_environment_dataset: str, zpool: str) -> bool:
+    return bootfs_for_pool(zpool) == boot_environment_dataset
 
 
 def list_boot_environments(target: str, columns: list) -> list:

@@ -32,7 +32,7 @@ def set_bootfs_failure(request, zpool, root_dataset):
 @require_zpool
 def check_startup(zpool, set_bootfs_failure):
     with pytest.raises(RuntimeError):
-        zedenv.lib.check.startup_check_bootfs(zpool)
+        zedenv.lib.be.bootfs_for_pool(zpool)
 
 
 @require_zpool

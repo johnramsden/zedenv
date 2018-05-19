@@ -126,7 +126,7 @@ def activate_boot_environment(be_requested: str,
         except RuntimeError as e:
             ZELogger.log({
                 "level": "EXCEPTION",
-                "message": f"Failed unmounting dataset {boot_environment}\n{e}\n"
+                "message": f"Failed unmounting dataset {be_requested}\n{e}\n"
             }, exit_on_error=True)
 
         mount_and_modify_dataset(be_requested,
@@ -193,7 +193,8 @@ def zedenv_activate(boot_environment: str,
             "message": f"Boot environment {boot_environment} exists'\n"
         }, verbose)
 
-    if zedenv.lib.be.is_current_boot_environment(boot_environment):
+    if zedenv.lib.be.is_active_boot_environment(be_requested,
+                                                zedenv.lib.be.dataset_pool(be_requested)):
         ZELogger.verbose_log({
             "level": "INFO",
             "message": f"Boot Environment {boot_environment} is already active.\n"
@@ -202,46 +203,46 @@ def zedenv_activate(boot_environment: str,
         dataset_mountpoint = pyzfscmds.system.agnostic.dataset_mountpoint(be_requested)
         activate_boot_environment(be_requested, dataset_mountpoint, verbose, bootloader_plugin)
 
-    be_child_datasets = None
-    try:
-        be_child_datasets = pyzfscmds.cmd.zfs_list(boot_environment_root,
-                                                   recursive=True,
-                                                   columns=["name"],
-                                                   zfs_types=["filesystem"])
-    except RuntimeError as e:
-        ZELogger.log({
-            "level": "EXCEPTION",
-            "message": f"Failed to list datasets under {boot_environment_root}\n{e}\n"
-        }, exit_on_error=True)
+        be_child_datasets = None
+        try:
+            be_child_datasets = pyzfscmds.cmd.zfs_list(boot_environment_root,
+                                                       recursive=True,
+                                                       columns=["name"],
+                                                       zfs_types=["filesystem"])
+        except RuntimeError as e:
+            ZELogger.log({
+                "level": "EXCEPTION",
+                "message": f"Failed to list datasets under {boot_environment_root}\n{e}\n"
+            }, exit_on_error=True)
 
-    be_child_datasets_list = [line for line in be_child_datasets.splitlines()]
-    disable_children_automount(be_child_datasets_list,
-                               be_requested,
-                               boot_environment_root,
-                               verbose)
+        be_child_datasets_list = [line for line in be_child_datasets.splitlines()]
+        disable_children_automount(be_child_datasets_list,
+                                   be_requested,
+                                   boot_environment_root,
+                                   verbose)
 
-    # TODO: Should this be noauto?
-    canmount_setting = "canmount=on"
-    for ds in be_child_datasets_list:
-        if be_requested == ds:
-            try:
-                pyzfscmds.cmd.zfs_set(ds, canmount_setting)
-            except RuntimeError:
-                ZELogger.log({
-                    "level": "EXCEPTION",
-                    "message": f"Failed to set {canmount_setting} for {ds}\n{e}\n"
-                }, exit_on_error=True)
-
-            if pyzfscmds.utility.is_clone(ds):
+        # TODO: Should this be noauto?
+        canmount_setting = "canmount=on"
+        for ds in be_child_datasets_list:
+            if be_requested == ds:
                 try:
-                    pyzfscmds.cmd.zfs_promote(ds)
+                    pyzfscmds.cmd.zfs_set(ds, canmount_setting)
                 except RuntimeError:
                     ZELogger.log({
                         "level": "EXCEPTION",
-                        "message": f"Failed to promote BE {ds}\n{e}\n"
+                        "message": f"Failed to set {canmount_setting} for {ds}\n{e}\n"
                     }, exit_on_error=True)
-                ZELogger.verbose_log(
-                    {"level": "INFO", "message": f"Promoted {ds}.\n"}, verbose)
+
+                if pyzfscmds.utility.is_clone(ds):
+                    try:
+                        pyzfscmds.cmd.zfs_promote(ds)
+                    except RuntimeError:
+                        ZELogger.log({
+                            "level": "EXCEPTION",
+                            "message": f"Failed to promote BE {ds}\n{e}\n"
+                        }, exit_on_error=True)
+                    ZELogger.verbose_log(
+                        {"level": "INFO", "message": f"Promoted {ds}.\n"}, verbose)
 
 
 @click.command(name="activate",

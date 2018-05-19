@@ -8,6 +8,7 @@ import zedenv.cli.create
 import pyzfscmds.utility
 
 require_root_dataset = pytest.mark.require_root_dataset
+require_zfs_version = pytest.mark.require_zfs_version
 
 
 def create_new_boot_environment(root_dataset):
@@ -23,6 +24,7 @@ def create_new_boot_environment(root_dataset):
     return f"{parent_dataset}/{boot_environment}"
 
 
+@require_zfs_version
 @require_root_dataset
 def test_boot_environment_activated(root_dataset):
 

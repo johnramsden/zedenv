@@ -49,7 +49,7 @@ def configure_boot_environment_list(be_root: str,
             if pyzfscmds.system.agnostic.mountpoint_dataset("/") == env[0]:
                 active = "N"
 
-            if zedenv.lib.check.bootfs_for_pool(
+            if zedenv.lib.be.bootfs_for_pool(
                     zedenv.lib.be.dataset_pool(env[0])) == env[0]:
                 active += "R"
 

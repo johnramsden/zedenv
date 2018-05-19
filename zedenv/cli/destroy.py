@@ -15,6 +15,7 @@ from zedenv.lib.logger import ZELogger
 
 def zedenv_destroy(boot_environment: str,
                    be_root: str,
+                   root_dataset: str,
                    verbose: Optional[bool],
                    unmount: Optional[bool]):
     """
@@ -23,6 +24,16 @@ def zedenv_destroy(boot_environment: str,
     ZELogger.verbose_log({
         "level": "INFO", "message": f"Destroying Boot Environment: '{boot_environment}'\n"
     }, verbose)
+
+    boot_environment_dataset = f"{be_root}/{boot_environment}"
+
+    if zedenv.lib.be.is_active_boot_environment(
+            boot_environment_dataset,
+            zedenv.lib.be.dataset_pool(boot_environment_dataset)):
+        ZELogger.log({
+            "level": "EXCEPTION",
+            "message": f"Cannot destroy active boot environment '{boot_environment}'."
+        }, exit_on_error=True)
 
 
 @click.command(name="destroy",
@@ -43,4 +54,8 @@ def cli(boot_environment: str,
     except RuntimeError as err:
         sys.exit(err)
 
-    zedenv_destroy(boot_environment, zedenv.lib.be.root(), verbose, unmount)
+    zedenv_destroy(boot_environment,
+                   zedenv.lib.be.root(),
+                   pyzfscmds.system.agnostic.mountpoint_dataset("/"),
+                   verbose,
+                   unmount)
