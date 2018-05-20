@@ -5,10 +5,20 @@ import datetime
 
 import zedenv.cli.activate
 import zedenv.cli.create
+
 import pyzfscmds.utility
+import pyzfscmds.cmd
 
 require_root_dataset = pytest.mark.require_root_dataset
 require_zfs_version = pytest.mark.require_zfs_version
+
+
+@require_root_dataset
+@pytest.fixture(scope="function")
+def activate_pool_bootfs(root_dataset):
+
+    pool = root_dataset.split("/")[0]
+    pyzfscmds.cmd.zpool_set(pool, f"bootfs={root_dataset}")
 
 
 def create_new_boot_environment(root_dataset):
@@ -26,7 +36,7 @@ def create_new_boot_environment(root_dataset):
 
 @require_zfs_version
 @require_root_dataset
-def test_boot_environment_activated(root_dataset):
+def test_boot_environment_activated(activate_pool_bootfs, root_dataset):
 
     new_be = create_new_boot_environment(root_dataset)
 

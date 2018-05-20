@@ -7,7 +7,7 @@ import pyzfscmds.check
 import pyzfscmds.cmd
 import pyzfscmds.system.agnostic
 import pyzfscmds.utility as zfs_utility
-from typing import Optional
+from typing import Optional, List
 
 import zedenv.lib.check
 from zedenv.lib.logger import ZELogger
@@ -136,7 +136,10 @@ def mount_pool(mount_dataset: str = "/") -> Optional[str]:
 
 
 def dataset_pool(dataset: str) -> Optional[str]:
-    return dataset.split("/")[0] if dataset is not None else None
+    if dataset is None or not pyzfscmds.utility.dataset_exists(dataset):
+        return None
+
+    return dataset.split("/")[0]
 
 
 def is_current_boot_environment(boot_environment: str) -> bool:
@@ -152,6 +155,11 @@ def is_current_boot_environment(boot_environment: str) -> bool:
 
 def is_active_boot_environment(boot_environment_dataset: str, zpool: str) -> bool:
     return bootfs_for_pool(zpool) == boot_environment_dataset
+
+
+def split_zfs_output(zfs_list: str) -> list:
+    property_list = [line for line in zfs_list.splitlines()]
+    return [line.split() for line in property_list]
 
 
 def list_boot_environments(target: str, columns: list) -> list:
@@ -180,8 +188,7 @@ def list_boot_environments(target: str, columns: list) -> list:
     it to a list of property=value strings
     """
 
-    property_list = [line for line in list_output.splitlines()]
-    split_property_list = [line.split() for line in property_list]
+    split_property_list = split_zfs_output(list_output)
 
     # Get all properties except date, then add date converted to string
     date_items = 5

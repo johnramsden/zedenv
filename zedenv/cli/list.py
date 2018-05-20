@@ -35,6 +35,11 @@ def configure_boot_environment_list(be_root: str,
     """
     boot_environments = zedenv.lib.be.list_boot_environments(be_root, columns)
 
+    """
+    Add an active column.
+    The other columns were ZFS properties, and the active column is not,
+    which is why they were added separately
+    """
     columns.insert(1, "active")
 
     unformatted_boot_environments = []
@@ -44,6 +49,7 @@ def configure_boot_environment_list(be_root: str,
 
     for env in boot_environments:
         if not zfs_utility.is_snapshot(env[0]):
+
             origin_list = env[1].split("@")
             origin_ds_child = origin_list[0].rsplit('/', 1)[-1]
             if zfs_utility.is_snapshot(env[1]):
@@ -51,6 +57,7 @@ def configure_boot_environment_list(be_root: str,
             else:
                 origin = env[1]
             active = ""
+
             if pyzfscmds.system.agnostic.mountpoint_dataset("/") == env[0]:
                 active = "N"
 
