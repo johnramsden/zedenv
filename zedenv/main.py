@@ -55,6 +55,8 @@ class ZECLI(click.MultiCommand):
     def get_command(self, ctx, name):
         ns = {}
         fn = os.path.join(command_modules_folder, name + '.py')
+        if not os.path.isfile(fn):
+            sys.exit(f"Command '{name}' doesn't exist, run 'zedenv --help'")
         with open(fn) as f:
             code = compile(f.read(), fn, 'exec')
             eval(code, ns, ns)
