@@ -135,8 +135,8 @@ def mount_pool(mount_dataset: str = "/") -> Optional[str]:
     return mountpoint_dataset.split("/")[0]
 
 
-def dataset_pool(dataset: str) -> Optional[str]:
-    if dataset is None or not pyzfscmds.utility.dataset_exists(dataset):
+def dataset_pool(dataset: str, zfs_type: str = 'filesystem') -> Optional[str]:
+    if dataset is None or not pyzfscmds.utility.dataset_exists(dataset, zfs_type=zfs_type):
         return None
 
     return dataset.split("/")[0]

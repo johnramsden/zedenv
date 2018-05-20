@@ -25,7 +25,10 @@ def zedenv_destroy(target: str,
     Put actual function to be called in this separate function to allow easier testing.
     """
     boot_environment_dataset = f"{be_root}/{target}"
-    be_pool = zedenv.lib.be.dataset_pool(boot_environment_dataset)
+    ds_is_snapshot = pyzfscmds.utility.is_snapshot(boot_environment_dataset)
+    be_pool = zedenv.lib.be.dataset_pool(
+        boot_environment_dataset,
+        zfs_type='filesystem' if not ds_is_snapshot else 'snapshot')
 
     if be_pool is None:
         ZELogger.log({
@@ -45,7 +48,7 @@ def zedenv_destroy(target: str,
                       f"Destroy '{boot_environment_dataset}'?", abort=True)
         click.echo()
 
-    if pyzfscmds.utility.is_snapshot(boot_environment_dataset):
+    if ds_is_snapshot:
         if not noop:
             try:
                 pyzfscmds.cmd.zfs_destroy_snapshot(boot_environment_dataset)
@@ -84,6 +87,8 @@ def zedenv_destroy(target: str,
                 "level": "INFO",
                 "message": f"Found origin snapshots for '{be_pool}':\n{origin_snaps}"
             }, verbose)
+
+
 
 
 @click.command(name="destroy",
