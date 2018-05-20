@@ -229,25 +229,25 @@ def zedenv_activate(boot_environment: str,
         dataset_mountpoint = pyzfscmds.system.agnostic.dataset_mountpoint(be_requested)
         activate_boot_environment(be_requested, dataset_mountpoint, verbose, bootloader_plugin)
 
-        be_child_datasets = None
-        try:
-            be_child_datasets = pyzfscmds.cmd.zfs_list(boot_environment_root,
-                                                       recursive=True,
-                                                       columns=["name"],
-                                                       zfs_types=["filesystem"])
-        except RuntimeError as e:
-            ZELogger.log({
-                "level": "EXCEPTION",
-                "message": f"Failed to list datasets under {boot_environment_root}\n{e}\n"
-            }, exit_on_error=True)
+    be_child_datasets = None
+    try:
+        be_child_datasets = pyzfscmds.cmd.zfs_list(boot_environment_root,
+                                                   recursive=True,
+                                                   columns=["name"],
+                                                   zfs_types=["filesystem"])
+    except RuntimeError as e:
+        ZELogger.log({
+            "level": "EXCEPTION",
+            "message": f"Failed to list datasets under {boot_environment_root}\n{e}\n"
+        }, exit_on_error=True)
 
-        be_child_datasets_list = [line for line in be_child_datasets.splitlines()]
-        disable_children_automount(be_child_datasets_list,
-                                   be_requested,
-                                   boot_environment_root,
-                                   verbose)
+    be_child_datasets_list = [line for line in be_child_datasets.splitlines()]
+    disable_children_automount(be_child_datasets_list,
+                               be_requested,
+                               boot_environment_root,
+                               verbose)
 
-        apply_settings_to_child_datasets(be_child_datasets_list, be_requested, verbose)
+    apply_settings_to_child_datasets(be_child_datasets_list, be_requested, verbose)
 
 
 @click.command(name="activate",
