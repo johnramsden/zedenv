@@ -1,16 +1,19 @@
-.. zedenv documentation master file, created by
-   sphinx-quickstart on Fri Dec 15 23:25:38 2017.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+zedenv Boot Environment Manager
+===============================
 
-zedenv - A Boot Environment Manager
-===================================
+``zedenv`` is a utility to manage Boot Environments using ZFS. ``zedenv`` is
+still in the alpha stage on Linux and FreeBSD. Take caution when using.
 
-.. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+Documentation
+-------------
 
+..  toctree::
+    :maxdepth: 2
+    :caption: Contents:
 
+    install
+    basic-usage
+    plugins
 
 Indices and tables
 ==================

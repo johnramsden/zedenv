@@ -264,7 +264,6 @@ def zedenv_destroy(target: str,
                         f"The origin snapshot '{clone_origin.split('@')[1]}' will be kept.")
 
         # Destroy the boot environment
-
         if not noop:
             try:
                 pyzfscmds.cmd.zfs_destroy(destroy_dataset,
@@ -275,7 +274,13 @@ def zedenv_destroy(target: str,
                     "message": f"Failed to destroy {destroy_dataset}\n"
                 }, exit_on_error=True)
 
-        if pyzfscmds.utility.is_clone(destroy_dataset):
+        try:
+            # TODO: Why is this necessary?
+            is_still_clone = pyzfscmds.utility.is_clone(destroy_dataset)
+        except RuntimeError:
+            is_still_clone = False
+
+        if is_still_clone:
             promote_origins(destroy_dataset, be_pool, origin_snaps, noop, verbose)
 
         if destroy_origin_snapshot:
