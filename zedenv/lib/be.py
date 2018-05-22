@@ -80,7 +80,7 @@ def properties(dataset, appended_properties: Optional[list]) -> list:
 
 def snapshot(boot_environment_name,
              boot_environment_root,
-             snap_prefix: str = "ze",
+             snap_prefix: Optional[str] = None,
              snap_suffix_time_format: str = "%Y-%m-%d-%H-%f") -> str:
     """
     Recursively Snapshot BE
@@ -101,7 +101,7 @@ def snapshot(boot_environment_name,
     dataset_name = f"{boot_environment_root}/{boot_environment_name}"
 
     suffix_time = datetime.datetime.now().strftime(snap_suffix_time_format)
-    full_snap_suffix = f"{snap_prefix}-{suffix_time}"
+    full_snap_suffix = f"{snap_prefix}-{suffix_time}" if snap_prefix else suffix_time
 
     try:
         pyzfscmds.cmd.zfs_snapshot(dataset_name,

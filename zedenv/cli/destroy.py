@@ -2,6 +2,7 @@
 
 import re
 import sys
+import datetime
 from typing import Optional
 
 import click
@@ -32,32 +33,81 @@ def get_promote_snapshots(be_pool: str, destroy_dataset: str) -> list:
 
     split_promote_snaps = zedenv.lib.be.split_zfs_output(promote_snaps)
 
-    ZELogger.verbose_log({
-        "level": "INFO",
-        "message": f"Found snapshots to promote:\n{split_promote_snaps}"
-    }, True)
-
     target = re.compile(r'\b' + destroy_dataset + r'(@|/.*@).*' + r'\b')
     return [ds[0] for ds in split_promote_snaps if target.match(ds[1])]
 
 
-def get_origin_snapshots(be_pool: str, destroy_dataset: str) -> list:
+def get_origin_snapshots(destroy_dataset: str) -> list:
     origin_all_snaps = None
     try:
         origin_all_snaps = pyzfscmds.cmd.zfs_list(
-            be_pool, recursive=True,
+            destroy_dataset, recursive=True,
             columns=['origin'], zfs_types=['filesystem', 'snapshot', 'volume'])
     except RuntimeError as e:
         ZELogger.log({
             "level": "EXCEPTION",
-            "message": f"Failed to list origin snapshots for '{be_pool}'.\n{e}"
+            "message": f"Failed to list origin snapshots for '{destroy_dataset}'.\n{e}"
         }, exit_on_error=True)
 
     split_snaps = zedenv.lib.be.split_zfs_output(origin_all_snaps)
+    return [ds[0].rstrip() for ds in split_snaps if ds[0].rstrip() != '-']
 
-    target = re.compile(r'\b' + destroy_dataset + r'(@|/.*@).*' + r'\b')
+def get_clone_origin(destroy_dataset: str) -> Optional[str]:
+    # Get origin snapshots
+    origin_snaps = get_origin_snapshots(destroy_dataset)
 
-    return [ds[1] for ds in split_snaps if target.match(ds[0])]
+    origin_property = None
+    try:
+        origin_property = pyzfscmds.cmd.zfs_get(destroy_dataset,
+                                                columns=['value'],
+                                                properties=['origin']).rstrip()
+    except RuntimeError:
+        ZELogger.log({
+            "level": "EXCEPTION",
+            "message": f"Failed to get origin of {destroy_dataset}\n{e}\n"
+        }, exit_on_error=True)
+
+    # Remove any newline chars
+    origin_property = origin_property.rstrip()
+
+    origin_datetime = None
+    try:
+        origin_datetime = datetime.datetime.strptime(
+            origin_property.split('@')[1], "%Y-%m-%d-%H-%f")
+    except ValueError:
+        try:
+            origin_datetime = datetime.datetime.strptime(
+                origin_property.split('@')[1].split("-", 1)[1], "%Y-%m-%d-%H-%f")
+        except ValueError as e:
+            ZELogger.log({
+                "level": "EXCEPTION",
+                "message": f"Failed to parse time from origin {origin_property}\n"
+            }, exit_on_error=True)
+
+    creation_property = None
+    try:
+        creation_property = pyzfscmds.cmd.zfs_get(destroy_dataset,
+                                                  columns=['value'],
+                                                  properties=['creation'])
+    except RuntimeError:
+        ZELogger.log({
+            "level": "EXCEPTION",
+            "message": f"Failed to get creation of {creation_property}\n{e}\n"
+        }, exit_on_error=True)
+
+    creation_property = creation_property.rstrip()
+
+    creation_datetime = None
+    try:
+        creation_datetime = datetime.datetime.strptime(creation_property,
+                                                       "%a %b %d %H:%M %Y")
+    except ValueError:
+        ZELogger.log({
+            "level": "EXCEPTION",
+            "message": f"Failed to parse time from origin {origin_property}\n{e}"
+        }, exit_on_error=True)
+
+    return origin_property if origin_datetime != creation_datetime else None
 
 
 def zedenv_destroy(target: str,
@@ -85,7 +135,7 @@ def zedenv_destroy(target: str,
     if zedenv.lib.be.is_current_boot_environment(target):
         ZELogger.log({
             "level": "EXCEPTION",
-            "message": f"Cannot destroy active boot environment '{target}'."
+            "message": f"Cannot destroy the active boot environment '{target}'."
         }, exit_on_error=True)
 
     if pyzfscmds.system.agnostic.dataset_mountpoint(destroy_dataset) == "/":
@@ -120,12 +170,7 @@ def zedenv_destroy(target: str,
             }, verbose)
 
             # Get and promote snapshots
-
             promote_snaps = get_promote_snapshots(be_pool, destroy_dataset)
-            ZELogger.verbose_log({
-                "level": "INFO",
-                "message": f"Found snapshots to promote:\n{promote_snaps}"
-            }, verbose)
 
             for ds in promote_snaps:
                 if not noop:
@@ -139,14 +184,33 @@ def zedenv_destroy(target: str,
                 ZELogger.verbose_log(
                     {"level": "INFO", "message": f"Promoted {ds}.\n"}, verbose)
 
-        # Get origin snapshots
+            """
+            Find destroyable:
+            There's probably a better way to match snapshots that can be destroyed,
+            for now this will do
+            """
 
-            # origin_snaps = get_origin_snapshots(be_pool, destroy_dataset)
-            #
-            # ZELogger.verbose_log({
-            #     "level": "INFO",
-            #     "message": f"Found origin snapshots':\n{origin_snaps}"
-            # }, verbose)
+            clone_origin = get_clone_origin(destroy_dataset)
+            if clone_origin:
+                if not noconfirm:
+                    click.echo(f"The origin snapshot '{clone_origin.split('@')[1]}' "
+                               f"for the boot environment '{target}' "
+                               f"still exists, do you want to destroy it? "
+                               f"This action will be permanent.\n")
+                    destroy_origin_snapshot = click.confirm(f"Destroy '{clone_origin}'?")
+                    click.echo()
+                else:
+                    destroy_origin_snapshot = True
+
+                if not destroy_origin_snapshot:
+                    click.echo(
+                        f"The origin snapshot '{clone_origin.split('@')[1]}' will be kept.")
+
+
+
+
+
+
 
 
 @click.command(name="destroy",
