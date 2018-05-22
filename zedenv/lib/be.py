@@ -7,7 +7,7 @@ import pyzfscmds.check
 import pyzfscmds.cmd
 import pyzfscmds.system.agnostic
 import pyzfscmds.utility as zfs_utility
-from typing import Optional, List
+from typing import Optional, List, Dict
 
 import zedenv.lib.check
 from zedenv.lib.logger import ZELogger
@@ -162,8 +162,17 @@ def split_zfs_output(zfs_list: str) -> list:
     return [line.split() for line in property_list]
 
 
-def list_boot_environments(target: str, columns: list) -> list:
+def list_boot_environments(target: str, columns: list) -> List[Dict[str, str]]:
     """
+    Returns a list of dictionaries with properties by name
+    E.g.:
+    [
+        {
+            'name': 'vault/ROOT/default-2@2018-05-21-161500',
+            'creation': 'Mon-May-21-16:15-2018'
+        }, ...
+    ]
+
     TODO:
     Space Used:
     By Snapshot = used
@@ -191,15 +200,22 @@ def list_boot_environments(target: str, columns: list) -> list:
     split_property_list = split_zfs_output(list_output)
 
     # Get all properties except date, then add date converted to string
-    date_items = 5
-    full_property_list = list()
+    full_property_list = []
+    date_length = 5         # Num items from date in array
+
+    # Put each property in dict, with creation time put in separately due to being split
     for line in split_property_list:
         if line[0] != target:
-            # Get all properties except date
-            formatted_property_line = line[:len(line) - date_items]
+            line_item = {}
+            line_date = "-".join(line[len(line) - date_length:])
+            line_columns = line[:-date_length]
 
-            # Add date converted to string
-            formatted_property_line.append("-".join(line[-date_items:]))
-            full_property_list.append(formatted_property_line)
+            for i, it in enumerate(line_columns):
+                if columns[i] != 'creation':
+                    line_item[columns[i]] = it
+
+            line_item['creation'] = line_date
+
+            full_property_list.append(line_item)
 
     return full_property_list

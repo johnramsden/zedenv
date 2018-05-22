@@ -14,7 +14,7 @@ def startup_check():
         pyzfscmds.check.is_root_on_zfs()
     except RuntimeError as err:
         raise RuntimeError(
-            f"System is not booting off a ZFS root dataset.\n{err}\n")
+            f"System is not booting off a ZFS root dataset.\n")
 
     try:
         zedenv.lib.be.bootfs_for_pool(
