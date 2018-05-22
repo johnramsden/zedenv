@@ -1,15 +1,14 @@
 """List boot environments cli"""
 
-import re
 import sys
-import datetime
-from typing import Optional
 
 import click
-
-import pyzfscmds.utility as zfs_utility
+import datetime
 import pyzfscmds.cmd
 import pyzfscmds.system.agnostic
+import pyzfscmds.utility as zfs_utility
+import re
+from typing import Optional
 
 import zedenv.lib.be
 import zedenv.lib.check
@@ -52,9 +51,9 @@ def get_origin_snapshots(destroy_dataset: str) -> list:
     split_snaps = zedenv.lib.be.split_zfs_output(origin_all_snaps)
     return [ds[0].rstrip() for ds in split_snaps if ds[0].rstrip() != '-']
 
-def get_clone_origin(destroy_dataset: str) -> Optional[str]:
+
+def get_clone_origin(destroy_dataset: str, origin_snapshots: list) -> Optional[str]:
     # Get origin snapshots
-    origin_snaps = get_origin_snapshots(destroy_dataset)
 
     origin_property = None
     try:
@@ -110,6 +109,65 @@ def get_clone_origin(destroy_dataset: str) -> Optional[str]:
     return origin_property if origin_datetime != creation_datetime else None
 
 
+def promote_origins(destroy_dataset, be_pool, origin_snaps, noop, verbose):
+    # promote dependents of origins used by destroy_dataset
+    origins = None
+    try:
+        origins = pyzfscmds.cmd.zfs_list(
+            be_pool, recursive=True,
+            columns=['name', 'origin'], zfs_types=['filesystem', 'snapshot', 'volume'])
+    except RuntimeError:
+        ZELogger.log({
+            "level": "EXCEPTION",
+            "message": f"Failed to list origins of '{destroy_dataset}'.\n"
+        }, exit_on_error=True)
+    origins_list = zedenv.lib.be.split_zfs_output(origins)
+
+    for ors in origin_snaps:
+        for ol in origins_list:
+            if ors == ol[1].rstrip():
+                if not noop:
+                    try:
+                        pyzfscmds.cmd.zfs_promote(ol[0].rstrip())
+                    except RuntimeError:
+                        ZELogger.log({
+                            "level": "EXCEPTION",
+                            "message": f"Failed to promote {ol[0].rstrip()}\n"
+                        }, exit_on_error=True)
+                ZELogger.verbose_log(
+                    {"level": "INFO", "message": f"Promoted {ol[0].rstrip()}.\n"}, verbose)
+
+
+def destroy_origin_snapshots(destroy_dataset, be_pool, origin_snaps, noop, verbose):
+    # destroy origin snapshots used by destroy_dataset
+    snapshots = None
+    try:
+        snapshots = pyzfscmds.cmd.zfs_list(be_pool,
+                                           recursive=True,
+                                           columns=['name'],
+                                           zfs_types=['snapshot'])
+    except RuntimeError:
+        ZELogger.log({
+            "level": "EXCEPTION",
+            "message": f"Failed to list origins snapshots of '{destroy_dataset}'.\n"
+        }, exit_on_error=True)
+    snapshots_list = zedenv.lib.be.split_zfs_output(snapshots)
+
+    for ors in origin_snaps:
+        for ol in snapshots_list:
+            if ors == ol[0].rstrip():
+                if not noop:
+                    try:
+                        pyzfscmds.cmd.zfs_destroy_snapshot(ol[0].rstrip())
+                    except RuntimeError:
+                        ZELogger.log({
+                            "level": "EXCEPTION",
+                            "message": f"Failed to destroy {ol[0].rstrip()}\n"
+                        }, exit_on_error=True)
+                ZELogger.verbose_log(
+                    {"level": "INFO", "message": f"Destroyed {ol[0].rstrip()}.\n"}, verbose)
+
+
 def zedenv_destroy(target: str,
                    be_root: str,
                    root_dataset: str,
@@ -162,6 +220,7 @@ def zedenv_destroy(target: str,
         ZELogger.verbose_log(
             {"level": "INFO", "message": f"Destroyed '{destroy_dataset}"}, verbose)
     else:
+        destroy_origin_snapshot = True
         if pyzfscmds.utility.is_clone(destroy_dataset):
             ZELogger.verbose_log({
                 "level": "INFO",
@@ -189,8 +248,8 @@ def zedenv_destroy(target: str,
             There's probably a better way to match snapshots that can be destroyed,
             for now this will do
             """
-
-            clone_origin = get_clone_origin(destroy_dataset)
+            origin_snaps = get_origin_snapshots(destroy_dataset)
+            clone_origin = get_clone_origin(destroy_dataset, origin_snaps)
             if clone_origin:
                 if not noconfirm:
                     click.echo(f"The origin snapshot '{clone_origin.split('@')[1]}' "
@@ -199,18 +258,33 @@ def zedenv_destroy(target: str,
                                f"This action will be permanent.\n")
                     destroy_origin_snapshot = click.confirm(f"Destroy '{clone_origin}'?")
                     click.echo()
-                else:
-                    destroy_origin_snapshot = True
 
                 if not destroy_origin_snapshot:
                     click.echo(
                         f"The origin snapshot '{clone_origin.split('@')[1]}' will be kept.")
 
+        # Destroy the boot environment
 
+        if not noop:
+            try:
+                pyzfscmds.cmd.zfs_destroy(destroy_dataset,
+                                          recursive_children=True)
+            except RuntimeError:
+                ZELogger.log({
+                    "level": "EXCEPTION",
+                    "message": f"Failed to destroy {destroy_dataset}\n"
+                }, exit_on_error=True)
 
+        if pyzfscmds.utility.is_clone(destroy_dataset):
+            promote_origins(destroy_dataset, be_pool, origin_snaps, noop, verbose)
 
+        if destroy_origin_snapshot:
+            destroy_origin_snapshots(destroy_dataset, be_pool, origin_snaps, noop, verbose)
 
-
+    ZELogger.verbose_log({
+        "level": "INFO",
+        "message": f"Destroyed boot environment {target} successfully.\n"
+    }, verbose)
 
 
 @click.command(name="destroy",
@@ -233,7 +307,6 @@ def cli(boot_environment: str,
         unmount: Optional[bool],
         noconfirm: Optional[bool],
         noop: Optional[bool]):
-
     try:
         zedenv.lib.check.startup_check()
     except RuntimeError as err:
