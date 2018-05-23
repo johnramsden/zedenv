@@ -1,13 +1,15 @@
 """List boot environments cli"""
 
+import re
 import sys
+import datetime
 
 import click
-import datetime
+
 import pyzfscmds.cmd
 import pyzfscmds.system.agnostic
 import pyzfscmds.utility as zfs_utility
-import re
+
 from typing import Optional
 
 import zedenv.lib.be
@@ -52,14 +54,14 @@ def get_origin_snapshots(destroy_dataset: str) -> list:
     return [ds[0].rstrip() for ds in split_snaps if ds[0].rstrip() != '-']
 
 
-def get_clone_origin(destroy_dataset: str, origin_snapshots: list) -> Optional[str]:
+def get_clone_origin(destroy_dataset: str) -> Optional[str]:
     # Get origin snapshots
 
     origin_property = None
     try:
         origin_property = pyzfscmds.cmd.zfs_get(destroy_dataset,
                                                 columns=['value'],
-                                                properties=['origin']).rstrip()
+                                                properties=['origin'])
     except RuntimeError:
         ZELogger.log({
             "level": "EXCEPTION",
@@ -155,17 +157,18 @@ def destroy_origin_snapshots(destroy_dataset, be_pool, origin_snaps, noop, verbo
 
     for ors in origin_snaps:
         for ol in snapshots_list:
-            if ors == ol[0].rstrip():
+            snap = ol[0].rstrip()
+            if ors == snap:
                 if not noop:
                     try:
-                        pyzfscmds.cmd.zfs_destroy_snapshot(ol[0].rstrip())
+                        pyzfscmds.cmd.zfs_destroy_snapshot(snap)
                     except RuntimeError:
                         ZELogger.log({
                             "level": "EXCEPTION",
-                            "message": f"Failed to destroy {ol[0].rstrip()}\n"
+                            "message": f"Failed to destroy {snap}\n"
                         }, exit_on_error=True)
                 ZELogger.verbose_log(
-                    {"level": "INFO", "message": f"Destroyed {ol[0].rstrip()}.\n"}, verbose)
+                    {"level": "INFO", "message": f"Destroyed {snap}.\n"}, verbose)
 
 
 def zedenv_destroy(target: str,
@@ -249,7 +252,7 @@ def zedenv_destroy(target: str,
             for now this will do
             """
             origin_snaps = get_origin_snapshots(destroy_dataset)
-            clone_origin = get_clone_origin(destroy_dataset, origin_snaps)
+            clone_origin = get_clone_origin(destroy_dataset)
             if clone_origin:
                 if not noconfirm:
                     click.echo(f"The origin snapshot '{clone_origin.split('@')[1]}' "
@@ -305,7 +308,7 @@ def zedenv_destroy(target: str,
               help="Destroy without prompt asking for confirmation.")
 @click.option('--noop', '-n',
               is_flag=True,
-              help="Print what would be destroyed.")
+              help="Print what would be destroyed but don't apply.")
 @click.argument('boot_environment')
 def cli(boot_environment: str,
         verbose: Optional[bool],

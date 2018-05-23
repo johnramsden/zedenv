@@ -18,9 +18,11 @@ from zedenv.lib.logger import ZELogger
 
 
 def get_bootloader(boot_environment: str,
+                   old_boot_environment: str,
                    bootloader: str,
                    verbose: bool,
-                   legacy: bool):
+                   noconfirm: bool,
+                   noop: bool,):
     bootloader_plugin = None
     if bootloader:
         plugins = zedenv.lib.configure.get_plugins()
@@ -32,7 +34,8 @@ def get_bootloader(boot_environment: str,
             }, verbose)
             if platform.system().lower() in plugins[bootloader].systems_allowed:
                 bootloader_plugin = plugins[bootloader](
-                    boot_environment, bootloader, verbose, legacy)
+                    boot_environment, old_boot_environment, bootloader,
+                    verbose=verbose, noconfirm=noconfirm, noop=noop)
             else:
                 ZELogger.log({
                     "level": "EXCEPTION",
@@ -54,6 +57,11 @@ def mount_and_modify_dataset(dataset: str,
                              pre_mount_properties: List[str] = None,
                              post_mount_properties: List[str] = None,
                              plugin=None):
+    ZELogger.verbose_log({
+        "level": "INFO",
+        "message": f"BRunning 'mount and modify'\n"
+    }, verbose)
+
     if pre_mount_properties:
         for pre_prop in pre_mount_properties:
             try:
@@ -85,10 +93,10 @@ def mount_and_modify_dataset(dataset: str,
         # Do stuff while mounted
         if plugin is not None:
             ZELogger.verbose_log({
-                "level": "INFO", "message": f"Ran plugin:\n{plugin.bootloader_modify()}\n"
+                "level": "INFO",
+                "message": f"Running plugin: '{plugin.bootloader}' - mid_activate\n"
             }, verbose)
-
-            # TODO
+            plugin.mid_activate(tmpdir)
 
         try:
             pyzfscmds.cmd.zfs_unmount(dataset)
@@ -115,19 +123,21 @@ def activate_boot_environment(be_requested: str,
                               dataset_mountpoint: Optional[str],
                               verbose: Optional[bool],
                               bootloader_plugin):
-    if dataset_mountpoint and dataset_mountpoint != "/":
-        ZELogger.verbose_log({
-            "level": "INFO",
-            "message": f"Unmounting {dataset_mountpoint}.\n"
-        }, verbose)
 
-        try:
-            zedenv.lib.system.umount(dataset_mountpoint)
-        except RuntimeError as e:
-            ZELogger.log({
-                "level": "EXCEPTION",
-                "message": f"Failed unmounting dataset {be_requested}\n{e}\n"
-            }, exit_on_error=True)
+    if dataset_mountpoint != "/":
+        if dataset_mountpoint:
+            ZELogger.verbose_log({
+                "level": "INFO",
+                "message": f"Unmounting {dataset_mountpoint}.\n"
+            }, verbose)
+
+            try:
+                zedenv.lib.system.umount(dataset_mountpoint)
+            except RuntimeError as e:
+                ZELogger.log({
+                    "level": "EXCEPTION",
+                    "message": f"Failed unmounting dataset {be_requested}\n{e}\n"
+                }, exit_on_error=True)
 
         mount_and_modify_dataset(be_requested,
                                  pre_mount_properties=["canmount=noauto"],
@@ -191,14 +201,12 @@ def zedenv_activate(boot_environment: str,
                     boot_environment_root: str,
                     verbose: Optional[bool],
                     bootloader: Optional[str],
-                    legacy: Optional[bool]):
+                    noconfirm: Optional[bool],
+                    noop: Optional[bool]):
     """
     If a plugin is found that can be run on the system,
     run the activate command from the plugin.
     """
-
-    bootloader_plugin = get_bootloader(
-        boot_environment, bootloader, verbose, legacy) if bootloader else None
 
     ZELogger.verbose_log({
         "level": "INFO",
@@ -206,6 +214,21 @@ def zedenv_activate(boot_environment: str,
     }, verbose)
 
     be_requested = f"{boot_environment_root}/{boot_environment}"
+
+    zpool = zedenv.lib.be.dataset_pool(be_requested)
+    current_be = None
+    try:
+        current_be = pyzfscmds.utility.dataset_child_name(
+            zedenv.lib.be.bootfs_for_pool(zpool))
+    except RuntimeError:
+        ZELogger.log({
+            "level": "EXCEPTION",
+            "message": f"Failed to get active boot environment'\n"
+        }, exit_on_error=True)
+
+    bootloader_plugin = get_bootloader(
+          boot_environment, current_be, bootloader, verbose, noconfirm, noop
+    ) if bootloader else None
 
     if not pyzfscmds.utility.dataset_exists(
             be_requested) and not pyzfscmds.utility.is_clone(be_requested):
@@ -219,13 +242,13 @@ def zedenv_activate(boot_environment: str,
             "message": f"Boot environment {boot_environment} exists'\n"
         }, verbose)
 
-    if zedenv.lib.be.is_active_boot_environment(be_requested,
-                                                zedenv.lib.be.dataset_pool(be_requested)):
+    if current_be == be_requested:
         ZELogger.verbose_log({
             "level": "INFO",
             "message": f"Boot Environment {boot_environment} is already active.\n"
         }, verbose)
     else:
+        # Set bootfs on dataset
         dataset_mountpoint = pyzfscmds.system.agnostic.dataset_mountpoint(be_requested)
         activate_boot_environment(be_requested, dataset_mountpoint, verbose, bootloader_plugin)
 
@@ -249,6 +272,9 @@ def zedenv_activate(boot_environment: str,
 
     apply_settings_to_child_datasets(be_child_datasets_list, be_requested, verbose)
 
+    if bootloader_plugin:
+        bootloader_plugin.post_activate()
+
 
 @click.command(name="activate",
                help="Activate a boot environment.")
@@ -257,14 +283,25 @@ def zedenv_activate(boot_environment: str,
               help="Print verbose output.")
 @click.option('--bootloader', '-b',
               help="Use bootloader type.")
-@click.option('--legacy', '-l',
+@click.option('--noconfirm', '-y',
               is_flag=True,
-              help="Legacy mountpoint type.")
+              help="In situations where confirmation is needed, assume yes without prompt.")
+@click.option('--noop', '-n',
+              is_flag=True,
+              help="Print what would be destroyed but don't apply.")
 @click.argument('boot_environment')
-def cli(boot_environment, verbose, bootloader, legacy):
+def cli(boot_environment, verbose, bootloader, noconfirm, noop):
+    if noconfirm and not bootloader:
+        sys.exit("The '--noconfirm/-y' flag requires the bootloader option '--bootloader/-b'.")
+
     try:
         zedenv.lib.check.startup_check()
     except RuntimeError as err:
         sys.exit(err)
 
-    zedenv_activate(boot_environment, zedenv.lib.be.root(), verbose, bootloader, legacy)
+    zedenv_activate(boot_environment,
+                    zedenv.lib.be.root(),
+                    verbose,
+                    bootloader,
+                    noconfirm,
+                    noop)

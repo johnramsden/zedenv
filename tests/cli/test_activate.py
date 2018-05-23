@@ -44,4 +44,4 @@ def test_boot_environment_activated(activate_pool_bootfs, root_dataset):
     be_root = pyzfscmds.utility.dataset_parent(new_be)
     be_name = pyzfscmds.utility.dataset_child_name(new_be)
 
-    zedenv.cli.activate.zedenv_activate(be_name, be_root, verbose, "systemdboot", False)
+    zedenv.cli.activate.zedenv_activate(be_name, be_root, verbose, None, True, False)

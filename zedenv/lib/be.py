@@ -219,3 +219,14 @@ def list_boot_environments(target: str, columns: list) -> List[Dict[str, str]]:
             full_property_list.append(line_item)
 
     return full_property_list
+
+
+def get_property(boot_environment_dataset: str, prop: str):
+    try:
+        esp = pyzfscmds.cmd.zfs_get(boot_environment_dataset,
+                                    columns=["value"],
+                                    properties=[prop]).rstrip()
+    except RuntimeError:
+        return None
+
+    return esp
