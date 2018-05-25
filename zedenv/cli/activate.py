@@ -22,7 +22,8 @@ def get_bootloader(boot_environment: str,
                    bootloader: str,
                    verbose: bool,
                    noconfirm: bool,
-                   noop: bool,):
+                   noop: bool,
+                   be_root: str):
     bootloader_plugin = None
     if bootloader:
         plugins = zedenv.lib.configure.get_plugins()
@@ -33,9 +34,21 @@ def get_bootloader(boot_environment: str,
                             f"bootloader with {bootloader}\n")
             }, verbose)
             if platform.system().lower() in plugins[bootloader].systems_allowed:
-                bootloader_plugin = plugins[bootloader](
-                    boot_environment, old_boot_environment, bootloader,
-                    verbose=verbose, noconfirm=noconfirm, noop=noop)
+                try:
+                    bootloader_plugin = plugins[bootloader]({
+                        'boot_environment': boot_environment,
+                        'old_boot_environment': old_boot_environment,
+                        'bootloader': bootloader,
+                        'verbose': verbose,
+                        'noconfirm': noconfirm,
+                        'noop': noop,
+                        'boot_environment_root': be_root
+                    })
+                except ValueError as e:
+                    ZELogger.log({
+                        "level": "EXCEPTION",
+                        "message": f"Failed to run plugin {bootloader}\n{e}\n"
+                    }, exit_on_error=True)
             else:
                 ZELogger.log({
                     "level": "EXCEPTION",
@@ -59,7 +72,7 @@ def mount_and_modify_dataset(dataset: str,
                              plugin=None):
     ZELogger.verbose_log({
         "level": "INFO",
-        "message": f"BRunning 'mount and modify'\n"
+        "message": f"Mount dataset for customization\n"
     }, verbose)
 
     if pre_mount_properties:
@@ -227,7 +240,7 @@ def zedenv_activate(boot_environment: str,
         }, exit_on_error=True)
 
     bootloader_plugin = get_bootloader(
-          boot_environment, current_be, bootloader, verbose, noconfirm, noop
+          boot_environment, current_be, bootloader, verbose, noconfirm, noop, boot_environment_root
     ) if bootloader else None
 
     if not pyzfscmds.utility.dataset_exists(

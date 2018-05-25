@@ -6,6 +6,7 @@ import tempfile
 import click
 
 import zedenv.lib.be
+import zedenv.plugins.configuration as plugin_config
 import zedenv.lib.system
 from zedenv.lib.logger import ZELogger
 
@@ -13,19 +14,21 @@ from zedenv.lib.logger import ZELogger
 class SystemdBoot:
     systems_allowed = ["linux"]
 
-    def __init__(self, boot_environment: str,
-                 old_boot_environment: str,
-                 bootloader: str,
-                 verbose: bool = False,
-                 noconfirm: bool = False,
-                 noop: bool = False):
-        self.boot_environment = boot_environment
-        self.old_boot_environment = old_boot_environment
-        self.bootloader = bootloader
-        self.verbose = verbose
-        self.noconfirm = noconfirm
-        self.noop = noop
-        self.be_root = zedenv.lib.be.root()
+    bootloader: str = "systemdboot"
+
+    def __init__(self, zedenv_data: dict):
+
+        for k in zedenv_data:
+            if k not in plugin_config.allowed_keys:
+                raise ValueError(f"Type {k} is not in allowed keys")
+
+        self.boot_environment = zedenv_data['boot_environment']
+        self.old_boot_environment = zedenv_data['old_boot_environment']
+        self.bootloader = zedenv_data['bootloader']
+        self.verbose = zedenv_data['verbose']
+        self.noconfirm = zedenv_data['noconfirm']
+        self.noop = zedenv_data['noop']
+        self.be_root = zedenv_data['boot_environment_root']
 
         self.env_dir = "env"
         self.boot_mountpoint = "/boot"
@@ -36,7 +39,7 @@ class SystemdBoot:
         self.new_entry = f"{self.entry_prefix}-{self.boot_environment}"
 
         esp = zedenv.lib.be.get_property(
-                    "/".join([self.be_root, boot_environment]), "org.zedenv:esp")
+                    "/".join([self.be_root, self.boot_environment]), "org.zedenv:esp")
         if esp is None or esp == "-":
             self.esp = "/mnt/efi"
         else:
@@ -44,7 +47,7 @@ class SystemdBoot:
         ZELogger.verbose_log({
             "level": "INFO",
             "message": f"esp set to {esp}\n"
-        }, verbose)
+        }, self.verbose)
 
         if not os.path.isdir(self.esp):
             ZELogger.log({
