@@ -58,6 +58,7 @@ setup(
         zedenv = zedenv.main:cli
         [zedenv.plugins]
         systemdboot = zedenv.plugins.systemdboot:SystemdBoot
+        freebsdloader = zedenv.plugins.freebsdloader:FreeBSDLoader
     """,
     zip_safe=False,
 )
