@@ -186,8 +186,7 @@ def disable_children_automount(be_child_datasets: List[str],
 
 def apply_settings_to_child_datasets(be_child_datasets_list, be_requested, verbose):
 
-    # TODO: Should this be noauto?
-    canmount_setting = "canmount=on"
+    canmount_setting = "canmount=noauto"
     for ds in be_child_datasets_list:
         if be_requested == ds:
             try:
