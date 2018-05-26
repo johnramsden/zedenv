@@ -109,7 +109,20 @@ def mount_and_modify_dataset(dataset: str,
                 "level": "INFO",
                 "message": f"Running plugin: '{plugin.bootloader}' - mid_activate\n"
             }, verbose)
-            plugin.mid_activate(tmpdir)
+            try:
+                plugin.mid_activate(tmpdir)
+            except RuntimeWarning as err:
+                ZELogger.verbose_log({
+                    "level": "WARNING",
+                    "message": f"During {plugin.bootloader} mid activate the following occurred:\n"
+                               f"\n{err}\nContinuing activation.\n"
+                }, verbose)
+            except RuntimeError as err:
+                ZELogger.log({
+                    "level": "EXCEPTION",
+                    "message": f"During {plugin.bootloader} mid activate the following occurred:\n"
+                               f"\n{err}\nStopping activation.\n"
+                }, exit_on_error=True)
 
         try:
             pyzfscmds.cmd.zfs_unmount(dataset)
@@ -242,6 +255,22 @@ def zedenv_activate(boot_environment: str,
           boot_environment, current_be, bootloader, verbose, noconfirm, noop, boot_environment_root
     ) if bootloader else None
 
+    if bootloader_plugin:
+        try:
+            bootloader_plugin.pre_activate()
+        except RuntimeWarning as err:
+            ZELogger.verbose_log({
+                "level": "WARNING",
+                "message": f"During {plugin.bootloader} mid activate the following occurred:\n"
+                           f"\n{err}\nContinuing activation.\n"
+            }, verbose)
+        except RuntimeError as err:
+            ZELogger.log({
+                "level": "EXCEPTION",
+                "message": f"During {plugin.bootloader} mid activate the following occurred:\n"
+                           f"\n{err}\nStopping activation.\n"
+            }, exit_on_error=True)
+
     if not pyzfscmds.utility.dataset_exists(
             be_requested) and not pyzfscmds.utility.is_clone(be_requested):
         ZELogger.log({
@@ -285,7 +314,20 @@ def zedenv_activate(boot_environment: str,
     apply_settings_to_child_datasets(be_child_datasets_list, be_requested, verbose)
 
     if bootloader_plugin:
-        bootloader_plugin.post_activate()
+        try:
+            bootloader_plugin.post_activate()
+        except RuntimeWarning as err:
+            ZELogger.verbose_log({
+                "level": "WARNING",
+                "message": f"During {plugin.bootloader} mid activate the following occurred:\n"
+                           f"\n{err}\nContinuing activation.\n"
+            }, verbose)
+        except RuntimeError as err:
+            ZELogger.log({
+                "level": "EXCEPTION",
+                "message": f"During {plugin.bootloader} mid activate the following occurred:\n"
+                           f"\n{err}\nStopping activation.\n"
+            }, exit_on_error=True)
 
 
 @click.command(name="activate",

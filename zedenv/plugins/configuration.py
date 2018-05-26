@@ -1,4 +1,4 @@
-allowed_keys: tuple = (
+allowed_keys = (
     'boot_environment',
     'old_boot_environment',
     'bootloader',

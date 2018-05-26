@@ -14,7 +14,7 @@ from zedenv.lib.logger import ZELogger
 class SystemdBoot:
     systems_allowed = ["linux"]
 
-    bootloader: str = "systemdboot"
+    bootloader = "systemdboot"
 
     def __init__(self, zedenv_data: dict):
 
