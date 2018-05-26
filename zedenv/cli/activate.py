@@ -97,7 +97,7 @@ def mount_and_modify_dataset(dataset: str,
             pyzfscmds.cmd.zfs_mount(dataset)
         except RuntimeError as e:
             ZELogger.log({
-                "level": "EXCEPTION", "message": f"Failed to mount mountpoint={dataset}\n{e}\n"
+                "level": "EXCEPTION", "message": f"Failed to mount mountpoint={tmpdir}\n{e}\n"
             }, exit_on_error=True)
 
         ZELogger.verbose_log(

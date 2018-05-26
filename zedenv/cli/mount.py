@@ -2,6 +2,7 @@
 
 import os
 import tempfile
+import platform
 
 from typing import Optional
 
@@ -22,40 +23,52 @@ def zedenv_mount(boot_environment: str, mountpoint: Optional[str], verbose: bool
     If an extra argument is given, mount the boot environment at the given mountpoint.
     """
 
+    system_platform = platform.system().lower()
+
     ZELogger.verbose_log({
         "level": "INFO",
         "message": f"Mounting boot environment '{boot_environment}'.\n"
     }, verbose)
 
     if not mountpoint:
-        mountpoint_used = tempfile.mkdtemp(suffix="mount", prefix="zedenv")
+        mountpoint_used = tempfile.mkdtemp(suffix=f"-{boot_environment}", prefix="zedenv-")
         ZELogger.verbose_log({
             "level": "INFO",
             "message": f"No mountpoint given, using a temporary directory {mountpoint_used}.\n"
         }, verbose)
     else:
-        if os.path.ismount(mountpoint):
+        mountpoint_used = mountpoint[0]
+        if os.path.ismount(mountpoint_used):
             ZELogger.log({
                 "level": "EXCEPTION",
-                "message": f"There is already a file system mounted at {mountpoint}"
+                "message": f"There is already a file system mounted at {mountpoint_used}"
             }, exit_on_error=True)
 
-        if not os.path.isdir(mountpoint):
+        if not os.path.isdir(mountpoint_used):
             ZELogger.log({
                 "level": "EXCEPTION",
-                "message": (f"The path'{mountpoint}' is not a directory, "
+                "message": (f"The path'{mountpoint_used}' is not a directory, "
                             "cannot be used as mountpoint.\n")
             }, exit_on_error=True)
         ZELogger.verbose_log({
             "level": "INFO",
-            "message": f"Mountpoint '{mountpoint}' given, using as mountpoint.\n"
+            "message": f"Mountpoint '{mountpoint_used}' given, using as mountpoint.\n"
         }, verbose)
-        mountpoint_used = mountpoint
 
     be_dataset = f"{be_root}/{boot_environment}"
 
+    mount_call = ["-t", "zfs"]
+    if system_platform == "linux":
+        """
+        Temp mount on linux requires '-o zfsutil', see:
+        https://github.com/zfsonlinux/zfs/issues/7452
+        """
+        mount_call.extend(["-o", "defaults,zfsutil"])
+
+    mount_call.extend([be_dataset, mountpoint_used])
+
     try:
-        zedenv.lib.system.mount(call_args=["-t", "zfs", be_dataset, mountpoint_used])
+        zedenv.lib.system.mount(call_args=mount_call)
     except RuntimeError as e:
         ZELogger.log({
             "level": "EXCEPTION",
