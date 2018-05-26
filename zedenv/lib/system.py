@@ -12,8 +12,8 @@ def mount(call_args: List[str] = None,
     try:
         mount_output = subprocess.check_output(
             mount_call, universal_newlines=True, stderr=subprocess.PIPE)
-    except subprocess.CalledProcessError:
-        raise RuntimeError(f"Failed to get mount data")
+    except subprocess.CalledProcessError as e:
+        raise RuntimeError(f"Failed to get mount data.\n{e}\n.")
 
     mount_list = mount_output.splitlines()
 
@@ -29,7 +29,7 @@ def umount(target: str, call_args: List[str] = None):
 
     try:
         umount_output = mount(umount_args, mount_command="umount")
-    except RuntimeError:
-        raise RuntimeError(f"Failed to unmount {target}")
+    except RuntimeError as e:
+        raise RuntimeError(f"Failed to unmount {target}\n{e}\n.")
 
     return umount_output
