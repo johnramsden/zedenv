@@ -344,14 +344,19 @@ def zedenv_activate(boot_environment: str,
               is_flag=True,
               help="Print what would be destroyed but don't apply.")
 @click.argument('boot_environment')
-def cli(boot_environment, verbose, bootloader, noconfirm, noop):
+def cli(boot_environment: str,
+        verbose: Optional[bool],
+        bootloader: Optional[str],
+        noconfirm: Optional[bool],
+        noop: Optional[bool]):
+
     if noconfirm and not bootloader:
         sys.exit("The '--noconfirm/-y' flag requires the bootloader option '--bootloader/-b'.")
 
     try:
         zedenv.lib.check.startup_check()
     except RuntimeError as err:
-        sys.exit(err)
+        ZELogger.log({"level": "EXCEPTION", "message": err}, exit_on_error=True)
 
     zedenv_activate(boot_environment,
                     zedenv.lib.be.root(),

@@ -35,7 +35,7 @@ def mount_children(child_datasets: list, mountpoint: str, verbose: bool):
                 os.makedirs(new_mount)
 
             try:
-                zedenv.lib.system.zfs_legacy_mount(cd['name'], new_mount)
+                zedenv.lib.system.zfs_manual_mount(cd['name'], new_mount)
             except RuntimeError as e:
                 ZELogger.log({
                     "level": "EXCEPTION",
@@ -86,7 +86,7 @@ def zedenv_mount(boot_environment: str, mountpoint: Optional[str], verbose: bool
     be_dataset = f"{be_root}/{boot_environment}"
 
     try:
-        zedenv.lib.system.zfs_legacy_mount(be_dataset, mountpoint_used)
+        zedenv.lib.system.zfs_manual_mount(be_dataset, mountpoint_used)
     except RuntimeError as e:
         ZELogger.log({
             "level": "EXCEPTION",
@@ -115,7 +115,7 @@ def zedenv_mount(boot_environment: str, mountpoint: Optional[str], verbose: bool
               help="Print verbose output.")
 @click.argument('boot_environment')
 @click.argument('mountpoint', nargs=-1, required=False)
-def cli(boot_environment, mountpoint, verbose):
+def cli(boot_environment: str, mountpoint: Optional[str], verbose: Optional[bool]):
     try:
         zedenv.lib.check.startup_check()
     except RuntimeError as err:

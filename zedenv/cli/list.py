@@ -175,7 +175,7 @@ def cli(verbose: Optional[bool],
     try:
         zedenv.lib.check.startup_check()
     except RuntimeError as err:
-        sys.exit(err)
+        ZELogger.log({"level": "EXCEPTION", "message": err}, exit_on_error=True)
 
     zedenv_list(verbose,
                 alldatasets,

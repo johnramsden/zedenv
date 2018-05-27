@@ -25,4 +25,4 @@ def cli(boot_environment, new_boot_environment, verbose):
     try:
         zedenv.lib.check.startup_check()
     except RuntimeError as err:
-        sys.exit(err)
+        ZELogger.log({"level": "EXCEPTION", "message": err}, exit_on_error=True)

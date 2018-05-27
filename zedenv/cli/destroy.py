@@ -318,7 +318,7 @@ def cli(boot_environment: str,
     try:
         zedenv.lib.check.startup_check()
     except RuntimeError as err:
-        sys.exit(err)
+        ZELogger.log({"level": "EXCEPTION", "message": err}, exit_on_error=True)
 
     zedenv_destroy(boot_environment,
                    zedenv.lib.be.root(),

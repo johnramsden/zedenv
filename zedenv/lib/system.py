@@ -36,7 +36,7 @@ def umount(target: str, call_args: List[str] = None):
     return umount_output
 
 
-def zfs_legacy_mount(dataset: str, mountpoint: str, call_args: Optional[list] = None):
+def zfs_manual_mount(dataset: str, mountpoint: str, call_args: Optional[list] = None):
     system_platform = platform.system().lower()
 
     mount_call = ["-t", "zfs"]

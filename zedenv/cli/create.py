@@ -84,7 +84,11 @@ def show_source_properties(property_list, verbose):
     ZELogger.verbose_log({"level": "INFO", "message": ""}, verbose)
 
 
-def zedenv_create(parent_dataset, root_dataset, boot_environment, verbose, existing):
+def zedenv_create(parent_dataset: str,
+                  root_dataset: str,
+                  boot_environment: str,
+                  verbose: bool,
+                  existing: Optional[str]):
     """
     :Parameters:
       parent_dataset : str
@@ -144,11 +148,11 @@ def zedenv_create(parent_dataset, root_dataset, boot_environment, verbose, exist
 @click.option('--existing', '-e',
               help="Use existing boot environment as source.")
 @click.argument('boot_environment')
-def cli(boot_environment, verbose, existing):
+def cli(boot_environment: str, verbose: Optional[bool], existing: Optional[str]):
     try:
         zedenv.lib.check.startup_check()
     except RuntimeError as err:
-        sys.exit(err)
+        ZELogger.log({"level": "EXCEPTION", "message": err}, exit_on_error=True)
 
     parent_dataset = zedenv.lib.be.root()
     root_dataset = pyzfscmds.system.agnostic.mountpoint_dataset("/")
