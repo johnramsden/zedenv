@@ -1,5 +1,6 @@
 import subprocess
-from typing import List
+import platform
+from typing import List, Optional
 
 
 def mount(call_args: List[str] = None,
@@ -33,3 +34,25 @@ def umount(target: str, call_args: List[str] = None):
         raise RuntimeError(f"Failed to unmount {target}\n{e}\n.")
 
     return umount_output
+
+
+def zfs_legacy_mount(dataset: str, mountpoint: str, call_args: Optional[list] = None):
+    system_platform = platform.system().lower()
+
+    mount_call = ["-t", "zfs"]
+    if system_platform == "linux":
+        """
+        Temp mount on linux requires '-o zfsutil', see:
+        https://github.com/zfsonlinux/zfs/issues/7452
+        """
+        mount_call.extend(["-o", "zfsutil"])
+
+    if call_args:
+        mount_call.extend(call_args)
+
+    mount_call.extend([dataset, mountpoint])
+
+    try:
+        mount(call_args=mount_call)
+    except RuntimeError as e:
+        raise

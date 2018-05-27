@@ -162,6 +162,44 @@ def split_zfs_output(zfs_list: str) -> list:
     return [line.split() for line in property_list]
 
 
+def list_child_mountpoints(boot_environment_dataset: str) -> List[dict]:
+    """
+    Returns a list of dataset's children, mountpoints, and source
+    E.g.:
+    [
+        {
+            name: 'zpool/ROOT/default/opt',
+            mountpoint: '/opt',
+            source: 'inherited from zpool/ROOT/default'
+        },
+        ...
+    ]
+
+    """
+    try:
+        child_mountpoints_unformatted = pyzfscmds.cmd.zfs_list(boot_environment_dataset,
+                                                               recursive=True,
+                                                               columns=['name', 'mountpoint'])
+    except RuntimeError:
+        raise
+
+    child_mountpoints = []
+    for d in split_zfs_output(child_mountpoints_unformatted):
+        if d[0] != boot_environment_dataset:
+            try:
+                mount_type = pyzfscmds.cmd.zfs_get(
+                    d[0], columns=['source'], properties=['mountpoint'])
+            except RuntimeError:
+                raise
+            child_mountpoints.append({
+                'name': d[0],
+                'mountpoint': d[1],
+                'source': mount_type.rstrip()
+            })
+
+    return child_mountpoints
+
+
 def list_boot_environments(target: str, columns: list) -> List[Dict[str, str]]:
     """
     Returns a list of dictionaries with properties by name
@@ -183,7 +221,7 @@ def list_boot_environments(target: str, columns: list) -> List[Dict[str, str]]:
     """
     list_output = None
     try:
-        list_output = pyzfscmds.cmd.zfs_list(target, recursive=True,
+        list_output = pyzfscmds.cmd.zfs_list(target, recursive=True, depth=1,
                                              zfs_types=["filesystem", "snapshot", "volume"],
                                              sort_properties_ascending=["creation"],
                                              columns=columns)
