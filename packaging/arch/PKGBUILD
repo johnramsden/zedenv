@@ -1,7 +1,7 @@
 # Maintainer: John Ramsden <johnramsden [at] riseup [dot] net>
 
 pkgname=zedenv-git
-pkgver=r73.0d6b819
+pkgver=r96.9159904
 pkgrel=1
 pkgdesc="Utility to manage Boot Environments using ZFS"
 arch=('any')
@@ -13,6 +13,7 @@ makedepends=('git' 'python-pip')
 source=('zedenv::git+https://github.com/johnramsden/zedenv#branch=release/v0.1.0')
 #validpgpkeys=('')
 md5sums=('SKIP')
+conflicts=('zedenv')
 
 pkgver() {
 	cd "${srcdir}/${pkgname%-git}"

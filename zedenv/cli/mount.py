@@ -109,7 +109,7 @@ def zedenv_mount(boot_environment: str, mountpoint: Optional[str], verbose: bool
 
 
 @click.command(name="mount",
-               help="Mount a boot environment.")
+               help="Mount a boot environment temporarily.")
 @click.option('--verbose', '-v',
               is_flag=True,
               help="Print verbose output.")

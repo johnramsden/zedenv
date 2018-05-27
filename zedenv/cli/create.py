@@ -51,10 +51,6 @@ def get_clones(root_dataset: str,
         }, exit_on_error=True)
 
     for c in [line for line in clones.splitlines()]:
-        ZELogger.log({
-            "level": "INFO",
-            "message": f"Getting clone of {c}@{snap_suffix}."
-        })
 
         if zfs_utility.dataset_exists(f"{c}@{snap_suffix}", zfs_type="snapshot"):
             if c == list_dataset:
