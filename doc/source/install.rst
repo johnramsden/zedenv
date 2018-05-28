@@ -3,7 +3,9 @@
 Install
 =======
 
-``zedenv`` can be installed a faw ways:
+``zedenv`` requires python 3.6+, and ZFS running as the root filesystem.
+
+It can be installed a few ways:
 
 * In a ``venv``
 * From the arch ``PKGBUILD``
