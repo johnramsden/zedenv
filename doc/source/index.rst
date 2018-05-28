@@ -12,6 +12,7 @@ Documentation
     :caption: Contents:
 
     install
+    setup
     basic-usage
     plugins
 

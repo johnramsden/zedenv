@@ -11,10 +11,14 @@ Create and activate a new Boot Environment.
 
 .. code-block:: shell
 
-    zedenv create default-0
-    zedenv activate default-0
+    $ zedenv create default-0
+    $ zedenv activate default-0
 
 This will make it the Boot Environment used on reboot.
+
+.. code-block:: shell
+
+    $ zedenv list
 
 .. code-block:: none
 
@@ -24,16 +28,24 @@ This will make it the Boot Environment used on reboot.
 
 This can be shown with a list, command. The boot environment currently being used will
 have a 'N' in the active column signifying the boot environment is being used now.
-An 'R' in the active column means this environment will be used on reboot
+An 'R' in the active column means this environment will be used on reboot.
 
-In order for reboot to work successfully with a bootloader, an extra flag
-'``-b/--bootloader``' must be used to specify a bootloader plugin. The plugin will make the necessary changes
-to boot from the new Boot Environment. 
+In order to integrate with a bootloader, an extra flag
+'``-b/--bootloader``' must be used to specify a bootloader plugin. The plugin will make
+the necessary changes to boot from the new Boot Environment.
+
+If you expect you will always be using a certain bootloader, you can set the 
+``org.zedenv:bootloader`` property on your boot environments, and the
+bootloader plugin will be used without you having to specify. 
+
+.. code-block:: shell
+
+    $ zfs set org.zedenv:bootloader=<bootloader plugin> zpool/ROOT
 
 Plugins available for your system can be listed with ``zedenv --plugins``. 
 
 If you're using ``zedenv`` to activate a boot environment, and a plugin isn't available, you
-will probably need to edit some config files to specify the new dataset, depending on
+may need to edit some config files to specify the new dataset, depending on
 your bootloader.
 
 Usage information can be given at any time by running ``zedenv --help``. 
