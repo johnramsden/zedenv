@@ -251,9 +251,20 @@ def zedenv_activate(boot_environment: str,
             "message": f"Failed to get active boot environment'\n"
         }, exit_on_error=True)
 
-    bootloader_plugin = get_bootloader(
-          boot_environment, current_be, bootloader, verbose, noconfirm, noop, boot_environment_root
-    ) if bootloader else None
+    bootloader_set = zedenv.lib.be.get_property(be_requested, "org.zedenv:bootloader")
+    if not bootloader and bootloader_set:
+        bootloader = bootloader_set
+
+    bootloader_plugin = None
+    if bootloader:
+        bootloader_plugin = get_bootloader(
+            boot_environment, current_be, bootloader, verbose, noconfirm, noop,
+            boot_environment_root
+        )
+        ZELogger.verbose_log({
+            "level": "INFO",
+            "message": f"Using plugin {bootloader}\n"
+        }, verbose)
 
     if bootloader_plugin:
         try:

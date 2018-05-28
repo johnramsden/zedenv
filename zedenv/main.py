@@ -28,7 +28,7 @@ def list_plugins(ctx, param, value):
 
     plugins = zedenv.lib.configure.get_plugins()
 
-    click.echo("Loaded plugins:")
+    click.echo("Available plugins:\n")
     for key, value in plugins.items():
         if platform.system().lower() in plugins[key].systems_allowed:
             click.echo(key)

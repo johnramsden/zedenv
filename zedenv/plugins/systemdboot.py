@@ -284,13 +284,6 @@ class SystemdBoot:
                         "message": f"IOError writing to {temp_new_dataset_kernel}\n{e}"
                     }, exit_on_error=True)
 
-        if os.path.isdir(temp_new_dataset_kernel):
-            ZELogger.log({
-                "level": "INFO",
-                "message": (f"New kernel directory {temp_new_dataset_kernel} already exists. "
-                            f"Wont modify.\n")
-            }, self.verbose)
-
     def edit_bootloader_default(self, temp_esp: str, overwrite: bool):
         real_loader_dir_path = os.path.join(self.esp, "loader")
         temp_loader_dir_path = os.path.join(temp_esp, "loader")
@@ -401,10 +394,10 @@ class SystemdBoot:
                                         f"'{tf_path_dst}.bak'\n")
 
                         }, exit_on_error=True)
-                        ZELogger.verbose_log({
-                            "level": "INFO",
-                            "message": f"Copied file {tf_path_src} -> {tf_path_dst}\n"
-                        }, self.verbose)
+                    ZELogger.verbose_log({
+                        "level": "INFO",
+                        "message": f"Copied file {tf_path_src} -> {tf_path_dst}\n"
+                    }, self.verbose)
             elif os.path.isdir(tf_path_src):
                 if os.path.isdir(tf_path_dst):
                     ZELogger.verbose_log({
