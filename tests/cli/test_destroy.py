@@ -23,8 +23,7 @@ def created_boot_environment(root_dataset):
 
     boot_environment = f"zedenv-{datetime.datetime.now().isoformat()}"
     verbose = True
-    existing = False
-
+    existing = None
     zedenv.cli.create.zedenv_create(parent_dataset, root_dataset,
                                     boot_environment, verbose, existing)
 
@@ -67,9 +66,10 @@ def test_boot_environment_destroy_fails(root_dataset, created_boot_environment):
     unmount = False
     noconfirm = True
     noop = True
+    bootloader = None
 
     zedenv.cli.activate.zedenv_activate(created_boot_environment,
-                                        parent_dataset, verbose, None, False)
+                                        parent_dataset,  verbose, bootloader, noconfirm, noop)
 
     with pytest.raises(SystemExit):
         zedenv.cli.destroy.zedenv_destroy(created_boot_environment,

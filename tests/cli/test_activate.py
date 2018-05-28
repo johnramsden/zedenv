@@ -26,7 +26,7 @@ def create_new_boot_environment(root_dataset):
 
     boot_environment = f"zedenv-{datetime.datetime.now().isoformat()}"
     verbose = True
-    existing = False
+    existing = None
 
     zedenv.cli.create.zedenv_create(parent_dataset, root_dataset,
                                     boot_environment, verbose, existing)

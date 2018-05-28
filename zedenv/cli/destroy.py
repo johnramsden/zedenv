@@ -300,9 +300,9 @@ def zedenv_destroy(target: str,
 @click.option('--verbose', '-v',
               is_flag=True,
               help="Print verbose output.")
-@click.option('--unmount', '-F',
-              is_flag=True,
-              help="Unmount BE automatically.")
+# @click.option('--unmount', '-F',
+#               is_flag=True,
+#               help="Unmount BE automatically.")
 @click.option('--noconfirm', '-y',
               is_flag=True,
               help="Destroy without prompt asking for confirmation.")

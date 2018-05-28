@@ -253,7 +253,7 @@ def zedenv_activate(boot_environment: str,
 
     bootloader_set = zedenv.lib.be.get_property(be_requested, "org.zedenv:bootloader")
     if not bootloader and bootloader_set:
-        bootloader = bootloader_set
+        bootloader = bootloader_set if bootloader_set != '-' else None
 
     bootloader_plugin = None
     if bootloader:
@@ -350,10 +350,10 @@ def zedenv_activate(boot_environment: str,
               help="Use bootloader type.")
 @click.option('--noconfirm', '-y',
               is_flag=True,
-              help="In situations where confirmation is needed, assume yes without prompt.")
+              help="Assume yes in situations where confirmation is needed.")
 @click.option('--noop', '-n',
               is_flag=True,
-              help="Print what would be destroyed but don't apply.")
+              help="Print what would be done, but don't apply.")
 @click.argument('boot_environment')
 def cli(boot_environment: str,
         verbose: Optional[bool],

@@ -110,10 +110,10 @@ def configure_boot_environment_list(be_root: str,
 
 
 def zedenv_list(verbose: Optional[bool],
-                alldatasets: Optional[bool],
+                # alldatasets: Optional[bool],
                 spaceused: Optional[bool],
                 scripting: Optional[bool],
-                snapshots: Optional[bool],
+                # snapshots: Optional[bool],
                 origin: Optional[bool],
                 be_root: str):
     """
@@ -151,26 +151,26 @@ def zedenv_list(verbose: Optional[bool],
 @click.option('--verbose', '-v',
               is_flag=True,
               help="Print verbose output.")
-@click.option('--alldatasets', '-a',
-              is_flag=True,
-              help="Display all datasets.")
+# @click.option('--alldatasets', '-a',
+#               is_flag=True,
+#               help="Display all datasets.")
 @click.option('--spaceused', '-D',
               is_flag=True,
               help="Display the full space usage for each boot environment.")
 @click.option('--scripting', '-H',
               is_flag=True,
               help="Scripting output.")
-@click.option('--snapshots', '-s',
-              is_flag=True,
-              help="Display snapshots.")
+# @click.option('--snapshots', '-s',
+#               is_flag=True,
+#               help="Display snapshots.")
 @click.option('--origin', '-O',
               is_flag=True,
               help="Display origin.")
 def cli(verbose: Optional[bool],
-        alldatasets: Optional[bool],
+        # alldatasets: Optional[bool],
         spaceused: Optional[bool],
         scripting: Optional[bool],
-        snapshots: Optional[bool],
+        # snapshots: Optional[bool],
         origin: Optional[bool]):
     try:
         zedenv.lib.check.startup_check()
@@ -178,9 +178,9 @@ def cli(verbose: Optional[bool],
         ZELogger.log({"level": "EXCEPTION", "message": err}, exit_on_error=True)
 
     zedenv_list(verbose,
-                alldatasets,
+                # alldatasets,
                 spaceused,
                 scripting,
-                snapshots,
+                # snapshots,
                 origin,
                 zedenv.lib.be.root())

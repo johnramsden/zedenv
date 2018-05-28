@@ -17,7 +17,7 @@ def test_boot_environment_created(root_dataset):
 
     boot_environment = f"zedenv-{datetime.datetime.now().isoformat()}"
     verbose = True
-    existing = False
+    existing = None
 
     zedenv.cli.create.zedenv_create(parent_dataset, root_dataset,
                                     boot_environment, verbose, existing)
@@ -31,7 +31,7 @@ def test_same_boot_environment_created(root_dataset):
 
     boot_environment = f"zedenv-{datetime.datetime.now().isoformat()}"
     verbose = True
-    existing = False
+    existing = None
 
     zedenv.cli.create.zedenv_create(parent_dataset, root_dataset,
                                     boot_environment, verbose, existing)

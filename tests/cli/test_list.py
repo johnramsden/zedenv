@@ -20,7 +20,7 @@ def test_boot_environment_listed(root_dataset, capsys):
     boot_environment = f"zedenv-{datetime.datetime.now().isoformat()}"
 
     verbose = True
-    existing = False
+    existing = None
 
     columns = ["name", "origin", "creation"]
 
