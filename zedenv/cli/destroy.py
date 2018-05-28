@@ -175,7 +175,6 @@ def zedenv_destroy(target: str,
                    be_root: str,
                    root_dataset: str,
                    verbose: Optional[bool],
-                   unmount: Optional[bool],
                    noconfirm: Optional[bool],
                    noop: Optional[bool]):
     """
@@ -224,6 +223,7 @@ def zedenv_destroy(target: str,
             {"level": "INFO", "message": f"Destroyed '{destroy_dataset}"}, verbose)
     else:
         destroy_origin_snapshot = True
+        origin_snaps = None
         if pyzfscmds.utility.is_clone(destroy_dataset):
             ZELogger.verbose_log({
                 "level": "INFO",
@@ -300,9 +300,6 @@ def zedenv_destroy(target: str,
 @click.option('--verbose', '-v',
               is_flag=True,
               help="Print verbose output.")
-# @click.option('--unmount', '-F',
-#               is_flag=True,
-#               help="Unmount BE automatically.")
 @click.option('--noconfirm', '-y',
               is_flag=True,
               help="Destroy without prompt asking for confirmation.")
@@ -312,7 +309,7 @@ def zedenv_destroy(target: str,
 @click.argument('boot_environment')
 def cli(boot_environment: str,
         verbose: Optional[bool],
-        unmount: Optional[bool],
+        # unmount: Optional[bool],
         noconfirm: Optional[bool],
         noop: Optional[bool]):
     try:
@@ -324,6 +321,5 @@ def cli(boot_environment: str,
                    zedenv.lib.be.root(),
                    pyzfscmds.system.agnostic.mountpoint_dataset("/"),
                    verbose,
-                   unmount,
                    noconfirm,
                    noop)

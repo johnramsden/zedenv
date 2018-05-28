@@ -37,7 +37,6 @@ def test_boot_environment_destroyed(root_dataset, created_boot_environment):
     parent_dataset = zfs_utility.dataset_parent(root_dataset)
 
     verbose = True
-    unmount = False
     noconfirm = True
     noop = True
 
@@ -45,7 +44,6 @@ def test_boot_environment_destroyed(root_dataset, created_boot_environment):
                                       parent_dataset,
                                       root_dataset,
                                       verbose,
-                                      unmount,
                                       noconfirm,
                                       noop)
 
@@ -63,7 +61,6 @@ def test_boot_environment_destroy_fails(root_dataset, created_boot_environment):
     parent_dataset = zfs_utility.dataset_parent(root_dataset)
 
     verbose = True
-    unmount = False
     noconfirm = True
     noop = True
     bootloader = None
@@ -76,6 +73,5 @@ def test_boot_environment_destroy_fails(root_dataset, created_boot_environment):
                                           parent_dataset,
                                           root_dataset,
                                           verbose,
-                                          unmount,
                                           noconfirm,
                                           noop)
