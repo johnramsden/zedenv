@@ -1,4 +1,4 @@
-..  index:: Install zedenv
+..  index:: Install
 
 Install
 =======

@@ -14,6 +14,7 @@ Documentation
     install
     setup
     basic-usage
+    commands
     plugins
 
 Indices and tables
