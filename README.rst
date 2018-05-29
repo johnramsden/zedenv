@@ -11,11 +11,11 @@ Documentation for the project can be found at `readthedocs <zedenv.readthedocs.i
 
 ``zedenv`` is still experimental and should not be used on production systems.
 
-Requirements
-------------
+Install
+=======
 
-``zedenv`` works on Linux and FreeBSD, requires python 3.6+, and ZFS running as
-the root filesystem.
+``zedenv`` requires python 3.6+, `pyzfscmds <https://github.com/johnramsden/pyzfscmds>`_, and ZFS running as the root
+filesystem.
 
 The system should also be configured in the format:
 
@@ -25,15 +25,13 @@ The system should also be configured in the format:
 
 For example, ``zpool/ROOT/default`` or ``zpool/sys/hostname/ROOT/default``.
 
-Installing
-----------
-
 ``zedenv`` can be installed a few ways:
 
-* With the Makefile
-* From the arch ``PKGBUILD``
+* From the `setup.py <setup.py>`_ directly.
+* From the `Makefile <packaging/Makefile>`_.
+* From the arch `PKGBUILD <packaging/arch/PKGBUILD>`_.
 
-To start, clone the git repos.
+First, clone the git repos.
 
 .. code-block:: shell
 
@@ -41,22 +39,33 @@ To start, clone the git repos.
     git clone https://github.com/johnramsden/zedenv
 
 Arch
-~~~~
+----
 
 Install ``pyzfscmds`` and ``zedenv`` by entering ``packaging/arch`` and running ``makepkg -sic``.
 
-Virtualenv
-~~~~~~~~~~
+.. code-block:: shell
+
+    cd pyzfscmds/packaging/arch
+    makepkg -sic
+
+    cd ../../zedenv/packaging/arch
+    makepkg -sic
+
+Makefile and setup.py
+---------------------
 
 To install without poluting your system, you can also create a directory somewhere
-and install in a ``venv``.
+and install in a ``venv``, otherwise install to the system.
 
-Create ``venv`` and activate.
+Optionally, create a ``venv`` and activate.
 
 .. code-block:: shell
 
     python3.6 -m venv venv
     . venv/bin/activate
+
+setup.py
+~~~~~~~~
 
 Enter the repos and install.
 
@@ -67,6 +76,21 @@ Enter the repos and install.
 
     cd ../zedenv pyzfscmds
     python setup.py install
+
+Makefile
+~~~~~~~~
+
+Enter the ``packaging`` directory in the repos run ``make``, ``pyzfscmds`` must
+be installed first.
+
+.. code-block:: shell
+
+    cd pyzfscmds/packaging
+    make
+
+    cd ../../zedenv/packaging
+    make
+
 
 How To Use
 ----------
