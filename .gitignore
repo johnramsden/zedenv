@@ -59,3 +59,4 @@ Pipfile.lock
 
 /packaging/arch/*
 !packaging/arch/PKGBUILD
+!packaging/arch/PKGBUILD-git
