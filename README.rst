@@ -28,9 +28,9 @@ For example, ``zpool/ROOT/default`` or ``zpool/sys/hostname/ROOT/default``.
 Installing
 ----------
 
-``zedenv`` can be installed a faw ways:
+``zedenv`` can be installed a few ways:
 
-* In a ``venv``
+* With the Makefile
 * From the arch ``PKGBUILD``
 
 To start, clone the git repos.
