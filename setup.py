@@ -16,7 +16,7 @@ dev_require = [
 ]
 
 dependency_links = [
-     'git+ssh://git@github.com/johnramsden/pyzfscmds.git#egg=pyzfscmds'
+     'git+https://github.com/johnramsden/pyzfscmds#egg=pyzfscmds'
 ]
 
 
@@ -24,11 +24,6 @@ def readme():
     with open('README.rst') as f:
         return f.read()
 
-
-# Install all with:
-# pip install -e .
-# pip install '.[dev]' '.[test]' \
-# --process-dependency-links git+ssh://git@github.com/johnramsden/pyzfscmds.git#egg=pyzfscmds
 setup(
     name='zedenv',
     version=__version__,
