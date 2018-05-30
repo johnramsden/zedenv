@@ -61,7 +61,7 @@ Enter the repos and install.
     cd pyzfscmds
     python setup.py install
 
-    cd ../zedenv pyzfscmds
+    cd ../zedenv
     python setup.py install
 
 Makefile
