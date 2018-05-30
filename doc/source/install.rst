@@ -10,7 +10,7 @@ It can be installed a few ways:
 
 * From the ``setup.py`` directly.
 * From the ``Makefile``.
-* From the arch ``PKGBUILD``
+* From the `Arch AUR <https://aur.archlinux.org/packages/zedenv/>`_.
 
 First, clone the git repos.
 
@@ -18,19 +18,6 @@ First, clone the git repos.
 
     git clone https://github.com/johnramsden/pyzfscmds
     git clone https://github.com/johnramsden/zedenv
-
-Arch
-----
-
-Install ``pyzfscmds`` and ``zedenv`` by entering ``packaging/arch`` and running ``makepkg -sic``.
-
-.. code-block:: shell
-
-    cd pyzfscmds/packaging/arch
-    makepkg -sic
-
-    cd ../../zedenv/packaging/arch
-    makepkg -sic
 
 Makefile and setup.py
 ---------------------
