@@ -113,9 +113,9 @@ So the 'default' boot environment config, located at
     options         zfs=zpool/ROOT/default rw
 
 To make the system happy when it looks for kernels at ``/boot``, this directory
-should be bindmounted to ``/boot``. To do bindmount
-``/mnt/efi/env/zedenv-default`` to ``/boot`` in ``/etc/fstab``.
+should be bindmounted to ``/boot``. 
 
+Bindmount ``/mnt/efi/env/zedenv-default`` to ``/boot`` in ``/etc/fstab``.
 
 .. code-block:: none
 
@@ -125,7 +125,7 @@ If this directory is not here, the kernels will not be updated when the system
 rebuilds the kernel.
 
 Once our system is set up in the proper configuration, ``zedenv`` will update
-your bootloader, and fstab - if requested - when a new boot environment is
+the bootloader, and fstab - if requested - when a new boot environment is
 activated.
 
 It will also update the configuration described above, asking you if the
