@@ -67,6 +67,7 @@ def get_bootloader(boot_environment: str,
 
 def mount_and_modify_dataset(dataset: str,
                              verbose: bool = False,
+                             noop: bool = False,
                              pre_mount_properties: List[str] = None,
                              post_mount_properties: List[str] = None,
                              plugin=None):
@@ -75,16 +76,18 @@ def mount_and_modify_dataset(dataset: str,
         "message": f"Mount dataset for customization\n"
     }, verbose)
 
-    if pre_mount_properties:
-        for pre_prop in pre_mount_properties:
-            try:
-                pyzfscmds.cmd.zfs_set(dataset, pre_prop)
-            except RuntimeError as e:
-                ZELogger.log({
-                    "level": "EXCEPTION",
-                    "message": f"Failed to set {pre_prop} on {dataset}\n{e}\n"
-                }, exit_on_error=True)
+    if not noop:
+        if pre_mount_properties:
+            for pre_prop in pre_mount_properties:
+                try:
+                    pyzfscmds.cmd.zfs_set(dataset, pre_prop)
+                except RuntimeError as e:
+                    ZELogger.log({
+                        "level": "EXCEPTION",
+                        "message": f"Failed to set {pre_prop} on {dataset}\n{e}\n"
+                    }, exit_on_error=True)
 
+    # Allow even with noop, just mounts and runs plugin
     with tempfile.TemporaryDirectory() as tmpdir:
         try:
             pyzfscmds.cmd.zfs_set(dataset, f"mountpoint={tmpdir}")
@@ -134,20 +137,22 @@ def mount_and_modify_dataset(dataset: str,
         ZELogger.verbose_log(
             {"level": "INFO", "message": f"Unmounted {dataset} from {tmpdir}\n"}, verbose)
 
-    if post_mount_properties:
-        for post_prop in post_mount_properties:
-            try:
-                pyzfscmds.cmd.zfs_set(dataset, post_prop)
-            except RuntimeError as e:
-                ZELogger.log({
-                    "level": "EXCEPTION",
-                    "message": f"Failed to set {post_prop} on {dataset}\n{e}\n"
-                }, exit_on_error=True)
+    if not noop:
+        if post_mount_properties:
+            for post_prop in post_mount_properties:
+                try:
+                    pyzfscmds.cmd.zfs_set(dataset, post_prop)
+                except RuntimeError as e:
+                    ZELogger.log({
+                        "level": "EXCEPTION",
+                        "message": f"Failed to set {post_prop} on {dataset}\n{e}\n"
+                    }, exit_on_error=True)
 
 
 def activate_boot_environment(be_requested: str,
                               dataset_mountpoint: Optional[str],
                               verbose: Optional[bool],
+                              noop: Optional[bool],
                               bootloader_plugin):
 
     if dataset_mountpoint != "/":
@@ -157,33 +162,39 @@ def activate_boot_environment(be_requested: str,
                 "message": f"Unmounting {dataset_mountpoint}.\n"
             }, verbose)
 
-            try:
-                zedenv.lib.system.umount(dataset_mountpoint)
-            except RuntimeError as e:
-                ZELogger.log({
-                    "level": "EXCEPTION",
-                    "message": f"Failed unmounting dataset {be_requested}\n{e}\n"
-                }, exit_on_error=True)
+            if not noop:
+                try:
+                    zedenv.lib.system.umount(dataset_mountpoint)
+                except RuntimeError as e:
+                    ZELogger.log({
+                        "level": "EXCEPTION",
+                        "message": f"Failed unmounting dataset {be_requested}\n{e}\n"
+                    }, exit_on_error=True)
 
         mount_and_modify_dataset(be_requested,
                                  pre_mount_properties=["canmount=noauto"],
                                  post_mount_properties=["mountpoint=/"],
                                  verbose=verbose,
+                                 noop=noop,
                                  plugin=bootloader_plugin)
 
-    try:
-        pyzfscmds.cmd.zpool_set(zedenv.lib.be.dataset_pool(be_requested),
-                                f"bootfs={be_requested}")
-    except RuntimeError as e:
-        ZELogger.log({
-            "level": "EXCEPTION", "message": f"Failed to set bootfs to {be_requested}\n{e}\n"
-        }, exit_on_error=True)
+    if not noop:
+        try:
+            pyzfscmds.cmd.zpool_set(zedenv.lib.be.dataset_pool(be_requested),
+                                    f"bootfs={be_requested}")
+        except RuntimeError as e:
+            ZELogger.log({
+                "level": "EXCEPTION", "message": f"Failed to set bootfs to {be_requested}\n{e}\n"
+            }, exit_on_error=True)
 
 
 def disable_children_automount(be_child_datasets: List[str],
                                be_requested: str,
                                boot_environment_root: str,
                                verbose: Optional[bool]):
+    """
+    Dont run if noop
+    """
     for ds in be_child_datasets:
         if not (be_requested in ds) and not (boot_environment_root == ds):
             try:
@@ -302,7 +313,8 @@ def zedenv_activate(boot_environment: str,
     else:
         # Set bootfs on dataset
         dataset_mountpoint = pyzfscmds.system.agnostic.dataset_mountpoint(be_requested)
-        activate_boot_environment(be_requested, dataset_mountpoint, verbose, bootloader_plugin)
+        activate_boot_environment(
+            be_requested, dataset_mountpoint, verbose, noop, bootloader_plugin)
 
     be_child_datasets = None
     try:
@@ -317,12 +329,13 @@ def zedenv_activate(boot_environment: str,
         }, exit_on_error=True)
 
     be_child_datasets_list = [line for line in be_child_datasets.splitlines()]
-    disable_children_automount(be_child_datasets_list,
-                               be_requested,
-                               boot_environment_root,
-                               verbose)
+    if not noop:
+        disable_children_automount(be_child_datasets_list,
+                                   be_requested,
+                                   boot_environment_root,
+                                   verbose)
 
-    apply_settings_to_child_datasets(be_child_datasets_list, be_requested, verbose)
+        apply_settings_to_child_datasets(be_child_datasets_list, be_requested, verbose)
 
     if bootloader_plugin:
         try:
