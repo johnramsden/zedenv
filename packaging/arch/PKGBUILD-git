@@ -26,4 +26,7 @@ build() {
 package() {
     cd "${srcdir}/${pkgname%-git}"
     python setup.py install --root="${pkgdir}/" --optimize=1 --skip-build
+
+    install -d "${pkgdir}/usr/share/license/${pkgname}"
+	install -m 755 "LICENSE" "${pkgdir}/usr/share/license/${pkgname}/LICENSE"
 }
