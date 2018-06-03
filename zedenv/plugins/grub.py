@@ -27,56 +27,19 @@ class GRUB(plugin_config.Plugin):
         self.old_entry = f"{self.entry_prefix}-{self.old_boot_environment}"
         self.new_entry = f"{self.entry_prefix}-{self.boot_environment}"
 
-        grub_dir = zedenv.lib.be.get_property(
-                    "/".join([self.be_root, self.boot_environment]), "org.zedenv:grubdir")
+        self.zedenv_properties["grubdir"] = "/etc/grub.d"
+        self.zedenv_properties["grubboot"] = "/boot/grub"
 
-        if grub_dir is None or grub_dir == "-":
-            self.grub_dir = "/etc/grub.d"
-        else:
-            self.grub_dir = grub_dir
+        if not os.path.isdir(self.zedenv_properties["grubdir"]):
+            self.plugin_property_error("grubdir")
 
-        ZELogger.verbose_log({
-            "level": "INFO",
-            "message": f"GRUB directory set to {self.grub_dir}\n"
-        }, self.verbose)
-
-        if not os.path.isdir(self.grub_dir):
-            ZELogger.log({
-                "level": "EXCEPTION",
-                "message": ("To use the GRUB plugin, an GRUB directory must be at the "
-                            "default location of `/etc/grub.d`, or at another location, with the "
-                            "property 'org.zedenv:grubdir' set on the dataset. To set it use the "
-                            "command (replacing with your pool and dataset)\n'"
-                            "zfs set org.zedenv:grubdir='/etc/grub.d' zpool/ROOT\n")
-            }, exit_on_error=True)
-
-        grub_boot = zedenv.lib.be.get_property(
-            "/".join([self.be_root, self.boot_environment]), "org.zedenv:grubboot")
-
-        if grub_boot is None or grub_boot == "-":
-            self.grub_boot_dir = "/boot/grub"
-        else:
-            self.grub_boot_dir = grub_boot
-
-        ZELogger.verbose_log({
-            "level": "INFO",
-            "message": f"GRUB boot directory set to {self.grub_boot_dir}\n"
-        }, self.verbose)
-
-        if not os.path.isdir(self.grub_boot_dir):
-            ZELogger.log({
-                "level": "EXCEPTION",
-                "message": ("To use the GRUB plugin, an GRUB boot directory must be at the "
-                            "default location of `/boot`, or at another location, with the "
-                            "property 'org.zedenv:grubboot' set on the dataset. To set it use the "
-                            "command (replacing with your pool and dataset)\n'"
-                            "zfs set org.zedenv:grubboot='/boot' zpool/ROOT\n")
-            }, exit_on_error=True)
+        if not os.path.isdir(self.zedenv_properties["grubboot"]):
+            self.plugin_property_error("grubboot")
 
         self.grub_cfg = "grub.cfg"
         self.grub_cfg_path = os.path.join(self.grub_boot_dir, self.grub_cfg)
 
-        self.grub_custom = "40_custom"
+        self.grub_custom = "40_zedenv_custom"
         self.grub_custom_path = os.path.join(self.grub_dir, self.grub_custom)
 
     def edit_bootloader_entry(self, temp_dir: str):
