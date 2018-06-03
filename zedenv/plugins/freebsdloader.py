@@ -8,22 +8,14 @@ import zedenv.plugins.configuration as plugin_config
 from zedenv.lib.logger import ZELogger
 
 
-class FreeBSDLoader:
+class FreeBSDLoader(plugin_config.Plugin):
+
     systems_allowed = ["freebsd"]
+    bootloader = "freebsdloader"
 
     def __init__(self, zedenv_data: dict):
 
-        for k in zedenv_data:
-            if k not in plugin_config.allowed_keys:
-                raise ValueError(f"Type {k} is not in allowed keys")
-
-        self.boot_environment = zedenv_data['boot_environment']
-        self.old_boot_environment = zedenv_data['old_boot_environment']
-        self.bootloader = zedenv_data['bootloader']
-        self.verbose = zedenv_data['verbose']
-        self.noconfirm = zedenv_data['noconfirm']
-        self.noop = zedenv_data['noop']
-        self.be_root = zedenv_data['boot_environment_root']
+        super().__init__(zedenv_data)
 
         self.zpool_cache = "boot/zfs/zpool.cache"
         self.zfs_be_path = "etc/rc.d/zfsbe"
@@ -44,9 +36,6 @@ class FreeBSDLoader:
                 "level": "EXCEPTION",
                 "message": f"Failed to set {canmount_setting} for {ds}\n{e}\n"
             }, exit_on_error=True)
-
-    def pre_activate(self):
-        pass
 
     def _loader_replace(self, configs: list):
         be_dataset = f"{self.be_root}/{self.boot_environment}"
