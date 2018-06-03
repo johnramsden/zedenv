@@ -28,127 +28,25 @@ class SystemdBoot(plugin_config.Plugin):
         self.old_entry = f"{self.entry_prefix}-{self.old_boot_environment}"
         self.new_entry = f"{self.entry_prefix}-{self.boot_environment}"
 
-        esp = zedenv.lib.be.get_property(
-                    "/".join([self.be_root, self.boot_environment]), "org.zedenv:esp")
-        if esp is None or esp == "-":
-            self.esp = "/mnt/efi"
-        else:
-            self.esp = esp
+        # Set defaults
+        self.zedenv_properties["esp"] = "/mnt/efi"
+
+        self.check_zedenv_properties()
+
         ZELogger.verbose_log({
             "level": "INFO",
-            "message": f"esp set to {esp}\n"
+            "message": f"esp set to {self.zedenv_properties['esp']}\n"
         }, self.verbose)
 
-        if not os.path.isdir(self.esp):
-            ZELogger.log({
-                "level": "EXCEPTION",
-                "message": ("To use the systemdboot plugin, an 'esp' must be mounted at the "
-                            "default location of `/mnt/esp`, or at another location, with the "
-                            "property 'org.zedenv:esp' set on the dataset. To set it use the "
-                            "command (replacing with your pool and dataset)\n'"
-                            "zfs set org.zedenv:esp='/mnt/efi' zpool/ROOT/default\n")
-            }, exit_on_error=True)
-
-    def modify_fstab(self, be_mountpoint: str):
-
-        be_fstab = os.path.join(be_mountpoint, "etc/fstab")
-        temp_fstab = os.path.join(be_mountpoint, "fstab.zedenv.new")
-
-        try:
-            shutil.copy(be_fstab, temp_fstab)
-        except PermissionError as e:
-            ZELogger.log({
-                "level": "EXCEPTION",
-                "message": f"Require Privileges to write to {temp_fstab}\n{e}"
-            }, exit_on_error=True)
-        except IOError as e:
-            ZELogger.log({
-                "level": "EXCEPTION",
-                "message": f"IOError writing to {temp_fstab}\n{e}"
-            }, exit_on_error=True)
-
-        replace_pattern = r'(^{esp}/{env}/?)(.*)(\s.*{boot}\s.*$)'.format(
-            esp=self.esp, env=self.env_dir, boot=self.boot_mountpoint)
-
-        target = re.compile(replace_pattern)
-
-        """
-        Find match for: $esp/$env_dir/$boot_environment $boot_location <fstab stuff>
-        eg: /mnt/efi/env/default-3 /boot none  rw,defaults,bind 0 0
-        """
-
-        with open(temp_fstab) as in_f:
-            lines = in_f.readlines()
-
-            match = next(
-                ((i, target.search(m)) for i, m in enumerate(lines) if target.search(m)), None)
-
-        """
-        Replace BE name with new one
-        """
-
-        if match:
-            old_fstab_entry = lines[match[0]]
-            new_fstab_entry = re.sub(
-                replace_pattern, r"\1" + self.new_entry + r"\3", lines[match[0]])
-
-            lines[match[0]] = new_fstab_entry
-
-            with open(temp_fstab, 'w') as out_f:
-                out_f.writelines(lines)
-        else:
-            ZELogger.log({
-                "level": "INFO",
-                "message": (f"Couldn't find bindmounted directory to replace, your system "
-                            "may not be configured for boot environments with systemdboot.")
-            })
-
-        if not self.noop:
-            try:
-                shutil.copy(be_fstab, f"{be_fstab}.bak")
-            except PermissionError as e:
-                ZELogger.log({
-                    "level": "EXCEPTION",
-                    "message": f"Require Privileges to write to {be_fstab}.bak\n{e}"
-                }, exit_on_error=True)
-            except IOError as e:
-                ZELogger.log({
-                    "level": "EXCEPTION",
-                    "message": f"IOError writing to  {be_fstab}.bak\n{e}"
-                }, exit_on_error=True)
-
-            if not self.noconfirm:
-                if click.confirm(
-                        "Would you like to edit the generated 'fstab'?", default=True):
-                    click.edit(filename=temp_fstab)
-
-            try:
-                shutil.copy(temp_fstab, be_fstab)
-            except PermissionError as e:
-                ZELogger.log({
-                    "level": "EXCEPTION",
-                    "message": f"Require Privileges to write to {be_fstab}\n{e}"
-                }, exit_on_error=True)
-            except IOError as e:
-                ZELogger.log({
-                    "level": "EXCEPTION",
-                    "message": f"IOError writing to {be_fstab}\n{e}"
-                }, exit_on_error=True)
-
-            ZELogger.log({
-                "level": "INFO",
-                "message": (f"Replaced fstab entry:\n{old_fstab_entry}\nWith new entry:\n"
-                            f"{new_fstab_entry}\nIn the boot environment's "
-                            f"'/etc/fstab'. A copy of the original "
-                            "'/etc/fstab' can be found at '/etc/fstab.bak'.\n")
-            })
+        if not os.path.isdir(self.zedenv_properties["esp"]):
+            self.plugin_property_error(self.zedenv_properties)
 
     def edit_bootloader_entry(self, temp_esp: str):
         temp_entries_dir = os.path.join(temp_esp, "loader/entries")
         temp_bootloader_file = os.path.join(temp_entries_dir,
                                             f"{self.new_entry}.conf")
 
-        real_entries_dir = os.path.join(self.esp, "loader/entries")
+        real_entries_dir = os.path.join(self.zedenv_properties["esp"], "loader/entries")
         real_bootloader_file = os.path.join(
             real_entries_dir, f"{self.old_entry}.conf")
 
@@ -232,7 +130,7 @@ class SystemdBoot(plugin_config.Plugin):
 
     def modify_bootloader(self, temp_esp: str,):
 
-        real_kernel_dir = os.path.join(self.esp, "env")
+        real_kernel_dir = os.path.join(self.zedenv_properties["esp"], "env")
         temp_kernel_dir = os.path.join(temp_esp, "env")
 
         real_old_dataset_kernel = os.path.join(real_kernel_dir, self.old_entry)
@@ -275,7 +173,7 @@ class SystemdBoot(plugin_config.Plugin):
                     }, exit_on_error=True)
 
     def edit_bootloader_default(self, temp_esp: str, overwrite: bool):
-        real_loader_dir_path = os.path.join(self.esp, "loader")
+        real_loader_dir_path = os.path.join(self.zedenv_properties["esp"], "loader")
         temp_loader_dir_path = os.path.join(temp_esp, "loader")
 
         real_loader_conf_path = os.path.join(real_loader_dir_path, "loader.conf")
@@ -381,7 +279,7 @@ class SystemdBoot(plugin_config.Plugin):
 
             self.edit_bootloader_entry(t_esp)
 
-            self.recurse_move(t_esp, self.esp)
+            self.recurse_move(t_esp, self.zedenv_properties["esp"])
 
             self.edit_bootloader_default(t_esp, overwrite=True)
 
@@ -392,4 +290,8 @@ class SystemdBoot(plugin_config.Plugin):
             "level": "INFO",
             "message": f"Running {self.bootloader} mid activate.\n"
         }, self.verbose)
-        self.modify_fstab(be_mountpoint)
+
+        replace_pattern = r'(^{esp}/{env}/?)(.*)(\s.*{boot}\s.*$)'.format(
+            esp=self.zedenv_properties["esp"], env=self.env_dir, boot=self.boot_mountpoint)
+
+        self.modify_fstab(be_mountpoint, replace_pattern, self.new_entry)
