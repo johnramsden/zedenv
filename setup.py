@@ -53,6 +53,7 @@ setup(
         [console_scripts]
         zedenv = zedenv.main:cli
         [zedenv.plugins]
+        grub = zedenv.plugins.grub:GRUB
         systemdboot = zedenv.plugins.systemdboot:SystemdBoot
         freebsdloader = zedenv.plugins.freebsdloader:FreeBSDLoader
     """,
