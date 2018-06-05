@@ -40,7 +40,8 @@ class Plugin(object):
             "level": "EXCEPTION",
             "message": (f"To use the {self.bootloader} plugin, use default{prop}, or set props\n"
                         f"To set it use the command (replacing with your pool and dataset)\n'"
-                        f"zfs set org.zedenv:{prop}='<new mount>' zpool/ROOT/default\n")
+                        f"zfs set org.zedenv.{self.bootloader}:{prop}='<new mount>' "
+                        "zpool/ROOT/default\n")
         }, exit_on_error=True)
 
     def check_zedenv_properties(self):
@@ -52,7 +53,7 @@ class Plugin(object):
         for prop in self.zedenv_properties:
             prop_val = zedenv.lib.be.get_property(
                     "/".join([self.be_root, self.boot_environment]),
-                    f"org.zedenv:{prop}")
+                    f"org.zedenv.{self.bootloader}:{prop}")
 
             if prop_val is not None and prop_val != "-":
                 self.zedenv_properties[prop] = prop_val
@@ -164,11 +165,19 @@ class Plugin(object):
 
             with open(temp_fstab, 'w') as out_f:
                 out_f.writelines(lines)
+
+            ZELogger.log({
+                "level": "INFO",
+                "message": (f"Replaced fstab entry:\n{old_fstab_entry}\nWith new entry:\n"
+                            f"{new_fstab_entry}\nIn the boot environment's "
+                            f"'/etc/fstab'.\n")
+            })
         else:
             ZELogger.log({
                 "level": "INFO",
                 "message": (f"Couldn't find bindmounted directory to replace, your system "
-                            "may not be configured for boot environments with systemdboot.")
+                            "may not be configured for boot environments with bindmounted "
+                            "'/boot'.")
             })
 
         if not self.noop:
@@ -205,9 +214,7 @@ class Plugin(object):
 
             ZELogger.log({
                 "level": "INFO",
-                "message": (f"Replaced fstab entry:\n{old_fstab_entry}\nWith new entry:\n"
-                            f"{new_fstab_entry}\nIn the boot environment's "
-                            f"'/etc/fstab'. A copy of the original "
+                "message": (f"Moved new '/etc/fstab' into place. A copy of the original "
                             "'/etc/fstab' can be found at '/etc/fstab.bak'.\n")
             })
 
