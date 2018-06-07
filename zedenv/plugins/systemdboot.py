@@ -130,8 +130,8 @@ class SystemdBoot(plugin_config.Plugin):
 
     def modify_bootloader(self, temp_esp: str,):
 
-        real_kernel_dir = os.path.join(self.zedenv_properties["esp"], "env")
-        temp_kernel_dir = os.path.join(temp_esp, "env")
+        real_kernel_dir = os.path.join(self.zedenv_properties["esp"], self.env_dir)
+        temp_kernel_dir = os.path.join(temp_esp, self.env_dir)
 
         real_old_dataset_kernel = os.path.join(real_kernel_dir, self.old_entry)
         temp_new_dataset_kernel = os.path.join(temp_kernel_dir, self.new_entry)
@@ -295,3 +295,15 @@ class SystemdBoot(plugin_config.Plugin):
             esp=self.zedenv_properties["esp"], env=self.env_dir, boot=self.boot_mountpoint)
 
         self.modify_fstab(be_mountpoint, replace_pattern, self.new_entry)
+
+    def post_destroy(self, target):
+        real_kernel_dir = os.path.join(self.zedenv_properties["esp"], self.env_dir)
+        dataset_kernels = os.path.join(real_kernel_dir, f"{self.entry_prefix}-{target}")
+
+        # if not self.noop:
+        if os.path.exists(dataset_kernels):
+            shutil.rmtree(dataset_kernels)
+            ZELogger.verbose_log({
+                "level": "INFO",
+                "message": f"Removed {dataset_kernels}.\n"
+            }, self.verbose)

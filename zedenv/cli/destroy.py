@@ -12,6 +12,7 @@ import pyzfscmds.utility as zfs_utility
 
 from typing import Optional
 
+import zedenv.lib.configure
 import zedenv.lib.be
 import zedenv.lib.check
 from zedenv.lib.logger import ZELogger
@@ -174,6 +175,7 @@ def destroy_origin_snapshots(destroy_dataset, be_pool, origin_snaps, noop, verbo
 def zedenv_destroy(target: str,
                    be_root: str,
                    root_dataset: str,
+                   bootloader: Optional[str],
                    verbose: Optional[bool],
                    noconfirm: Optional[bool],
                    noop: Optional[bool]):
@@ -192,10 +194,21 @@ def zedenv_destroy(target: str,
             "message": f"The destroy target {target} does not exist."
         }, exit_on_error=True)
 
-    if zedenv.lib.be.is_current_boot_environment(target):
+    current_be = None
+    zpool = zedenv.lib.be.dataset_pool(destroy_dataset)
+    try:
+        current_be = pyzfscmds.utility.dataset_child_name(
+            zedenv.lib.be.bootfs_for_pool(zpool))
+    except RuntimeError:
         ZELogger.log({
             "level": "EXCEPTION",
-            "message": f"Cannot destroy the active boot environment '{target}'."
+            "message": f"Failed to get active boot environment'\n"
+        }, exit_on_error=True)
+
+    if current_be == target:
+        ZELogger.log({
+            "level": "EXCEPTION",
+            "message": f"Cannot destroy current active environment '{target}'."
         }, exit_on_error=True)
 
     if pyzfscmds.system.agnostic.dataset_mountpoint(destroy_dataset) == "/":
@@ -209,6 +222,19 @@ def zedenv_destroy(target: str,
                       "This action will be permanent.\n\n"
                       f"Destroy '{destroy_dataset}'?", abort=True)
         click.echo()
+
+    bootloader_set = zedenv.lib.be.get_property(destroy_dataset, "org.zedenv:bootloader")
+    if not bootloader and bootloader_set:
+        bootloader = bootloader_set if bootloader_set != '-' else None
+
+    bootloader_plugin = None
+    if bootloader:
+        bootloader_plugin = zedenv.lib.configure.get_bootloader(
+            target, current_be, bootloader, verbose, noconfirm, noop, be_root)
+        ZELogger.verbose_log({
+            "level": "INFO",
+            "message": f"Using plugin {bootloader}\n"
+        }, verbose)
 
     if ds_is_snapshot:
         if not noop:
@@ -289,6 +315,9 @@ def zedenv_destroy(target: str,
         if destroy_origin_snapshot:
             destroy_origin_snapshots(destroy_dataset, be_pool, origin_snaps, noop, verbose)
 
+    if bootloader:
+        bootloader_plugin.post_destroy(target)
+
     ZELogger.verbose_log({
         "level": "INFO",
         "message": f"Destroyed boot environment {target} successfully.\n"
@@ -306,9 +335,12 @@ def zedenv_destroy(target: str,
 @click.option('--noop', '-n',
               is_flag=True,
               help="Print what would be destroyed but don't apply.")
+@click.option('--bootloader', '-b',
+              help="Use bootloader type.")
 @click.argument('boot_environment')
 def cli(boot_environment: str,
         verbose: Optional[bool],
+        bootloader: Optional[str],
         # unmount: Optional[bool],
         noconfirm: Optional[bool],
         noop: Optional[bool]):
@@ -320,6 +352,7 @@ def cli(boot_environment: str,
     zedenv_destroy(boot_environment,
                    zedenv.lib.be.root(),
                    pyzfscmds.system.agnostic.mountpoint_dataset("/"),
+                   bootloader,
                    verbose,
                    noconfirm,
                    noop)

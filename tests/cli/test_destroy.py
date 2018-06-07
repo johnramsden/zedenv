@@ -39,10 +39,12 @@ def test_boot_environment_destroyed(root_dataset, created_boot_environment):
     verbose = True
     noconfirm = True
     noop = True
+    bootloader = None
 
     zedenv.cli.destroy.zedenv_destroy(created_boot_environment,
                                       parent_dataset,
                                       root_dataset,
+                                      bootloader,
                                       verbose,
                                       noconfirm,
                                       noop)

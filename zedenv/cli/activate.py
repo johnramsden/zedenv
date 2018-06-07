@@ -3,7 +3,7 @@
 import sys
 
 import click
-import platform
+
 import pyzfscmds.cmd
 import pyzfscmds.system.agnostic
 import pyzfscmds.utility
@@ -15,54 +15,6 @@ import zedenv.lib.check
 import zedenv.lib.configure
 import zedenv.lib.system
 from zedenv.lib.logger import ZELogger
-
-
-def get_bootloader(boot_environment: str,
-                   old_boot_environment: str,
-                   bootloader: str,
-                   verbose: bool,
-                   noconfirm: bool,
-                   noop: bool,
-                   be_root: str):
-    bootloader_plugin = None
-    if bootloader:
-        plugins = zedenv.lib.configure.get_plugins()
-        if bootloader in plugins:
-            ZELogger.verbose_log({
-                "level": "INFO",
-                "message": ("Configuring boot environment "
-                            f"bootloader with {bootloader}\n")
-            }, verbose)
-            if platform.system().lower() in plugins[bootloader].systems_allowed:
-                try:
-                    bootloader_plugin = plugins[bootloader]({
-                        'boot_environment': boot_environment,
-                        'old_boot_environment': old_boot_environment,
-                        'bootloader': bootloader,
-                        'verbose': verbose,
-                        'noconfirm': noconfirm,
-                        'noop': noop,
-                        'boot_environment_root': be_root
-                    })
-                except ValueError as e:
-                    ZELogger.log({
-                        "level": "EXCEPTION",
-                        "message": f"Failed to run plugin {bootloader}\n{e}\n"
-                    }, exit_on_error=True)
-            else:
-                ZELogger.log({
-                    "level": "EXCEPTION",
-                    "message": (f"The plugin {bootloader} is "
-                                f"not valid for {platform.system().lower()}\n")
-                }, exit_on_error=True)
-        else:
-            ZELogger.log({
-                "level": "EXCEPTION",
-                "message": f"bootloader type {bootloader} does not exist\n"
-                           "Check available plugins with 'zedenv --plugins'\n"
-            }, exit_on_error=True)
-
-    return bootloader_plugin
 
 
 def mount_and_modify_dataset(dataset: str,
@@ -268,7 +220,7 @@ def zedenv_activate(boot_environment: str,
 
     bootloader_plugin = None
     if bootloader:
-        bootloader_plugin = get_bootloader(
+        bootloader_plugin = zedenv.lib.configure.get_bootloader(
             boot_environment, current_be, bootloader, verbose, noconfirm, noop,
             boot_environment_root
         )
