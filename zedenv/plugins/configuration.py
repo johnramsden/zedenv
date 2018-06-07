@@ -51,14 +51,21 @@ class Plugin(object):
         If prop unset, leave default
         """
         for prop in self.zedenv_properties:
+            ZELogger.verbose_log({
+                "level": "INFO",
+                "message": f"Checking prop: 'org.zedenv.{self.bootloader}:{prop}'"
+            }, self.verbose)
             prop_val = zedenv.lib.be.get_property(
                     "/".join([self.be_root, self.boot_environment]),
                     f"org.zedenv.{self.bootloader}:{prop}")
 
             if prop_val is not None and prop_val != "-":
                 self.zedenv_properties[prop] = prop_val
-
-            ZELogger.log({"level": "INFO", "message": f"Found: {prop}"})
+                ZELogger.verbose_log({
+                    "level": "INFO",
+                    "message": (f"org.zedenv.{self.bootloader}:{prop}="
+                                f"{self.zedenv_properties[prop]}.\n")
+                }, self.verbose)
 
     def recurse_move(self, source, dest, overwrite=False):
         for tf in os.listdir(source):
@@ -142,8 +149,8 @@ class Plugin(object):
         target = re.compile(replace_pattern)
 
         """
-        Find match for: $esp/$env_dir/$boot_environment $boot_location <fstab stuff>
-        eg: /mnt/efi/env/default-3 /boot none  rw,defaults,bind 0 0
+        Find match for: $esp/$env_dir/zedenv-$boot_environment $boot_location <fstab stuff>
+        eg: /mnt/efi/env/zedenv-default-3 /boot none  rw,defaults,bind 0 0
         """
 
         with open(temp_fstab) as in_f:

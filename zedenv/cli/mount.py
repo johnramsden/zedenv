@@ -59,44 +59,43 @@ def zedenv_mount(boot_environment: str, mountpoint: Optional[str], verbose: bool
     }, verbose)
 
     if not mountpoint:
-        mountpoint_used = tempfile.mkdtemp(suffix=f"-{boot_environment}", prefix="zedenv-")
+        mountpoint = tempfile.mkdtemp(suffix=f"-{boot_environment}", prefix="zedenv-")
         ZELogger.verbose_log({
             "level": "INFO",
-            "message": f"No mountpoint given, using a temporary directory {mountpoint_used}.\n"
+            "message": f"No mountpoint given, using a temporary directory {mountpoint}.\n"
         }, verbose)
     else:
-        mountpoint_used = mountpoint[0]
-        if os.path.ismount(mountpoint_used):
+        if os.path.ismount(mountpoint):
             ZELogger.log({
                 "level": "EXCEPTION",
-                "message": f"There is already a file system mounted at {mountpoint_used}"
+                "message": f"There is already a file system mounted at {mountpoint}"
             }, exit_on_error=True)
 
-        if not os.path.isdir(mountpoint_used):
+        if not os.path.isdir(mountpoint):
             ZELogger.log({
                 "level": "EXCEPTION",
-                "message": (f"The path'{mountpoint_used}' is not a directory, "
+                "message": (f"The path'{mountpoint}' is not a directory, "
                             "cannot be used as mountpoint.\n")
             }, exit_on_error=True)
         ZELogger.verbose_log({
             "level": "INFO",
-            "message": f"Mountpoint '{mountpoint_used}' given, using as mountpoint.\n"
+            "message": f"Mountpoint '{mountpoint}' given, using as mountpoint.\n"
         }, verbose)
 
     be_dataset = f"{be_root}/{boot_environment}"
 
     try:
-        zedenv.lib.system.zfs_manual_mount(be_dataset, mountpoint_used)
+        zedenv.lib.system.zfs_manual_mount(be_dataset, mountpoint)
     except RuntimeError as e:
         ZELogger.log({
             "level": "EXCEPTION",
-            "message": f"Failed mounting dataset to '{mountpoint_used}'.\n{e}"
+            "message": f"Failed mounting dataset to '{mountpoint}'.\n{e}"
         }, exit_on_error=True)
 
     ZELogger.verbose_log(
-        {"level": "INFO", "message": f"Mounted dataset to '{mountpoint_used}'.\n"}, verbose)
+        {"level": "INFO", "message": f"Mounted dataset to '{mountpoint}'.\n"}, verbose)
     if not verbose:
-        ZELogger.log({"level": "INFO", "message": mountpoint_used})
+        ZELogger.log({"level": "INFO", "message": mountpoint})
 
     child_datasets = zedenv.lib.be.list_child_mountpoints(be_dataset)
 
@@ -105,7 +104,7 @@ def zedenv_mount(boot_environment: str, mountpoint: Optional[str], verbose: bool
             "level": "INFO",
             "message": f"Mounting children of '{boot_environment}'.\n"
         }, verbose)
-        mount_children(child_datasets, mountpoint_used, verbose)
+        mount_children(child_datasets, mountpoint, verbose)
 
 
 @click.command(name="mount",
@@ -142,4 +141,4 @@ def cli(boot_environment: str, mountpoint: Optional[str], verbose: Optional[bool
             "message": f"Dataset already mounted to {dataset_mountpoint}\n"
         }, exit_on_error=True)
 
-    zedenv_mount(boot_environment, mountpoint, verbose, be_root)
+    zedenv_mount(boot_environment, mountpoint[0], verbose, be_root)

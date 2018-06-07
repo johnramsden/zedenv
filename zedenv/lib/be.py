@@ -245,14 +245,17 @@ def list_boot_environments(target: str, columns: list) -> List[Dict[str, str]]:
     for line in split_property_list:
         if line[0] != target:
             line_item = {}
-            line_date = "-".join(line[len(line) - date_length:])
-            line_columns = line[:-date_length]
+
+            if "creation" in columns:
+                line_columns = line[:-date_length]
+                line_date = "-".join(line[len(line) - date_length:])
+                line_item['creation'] = line_date
+            else:
+                line_columns = line
 
             for i, it in enumerate(line_columns):
                 if columns[i] != 'creation':
                     line_item[columns[i]] = it
-
-            line_item['creation'] = line_date
 
             full_property_list.append(line_item)
 
