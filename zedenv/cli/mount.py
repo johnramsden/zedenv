@@ -114,7 +114,7 @@ def zedenv_mount(boot_environment: str, mountpoint: Optional[str], verbose: bool
               help="Print verbose output.")
 @click.argument('boot_environment')
 @click.argument('mountpoint', nargs=-1, required=False)
-def cli(boot_environment: str, mountpoint: Optional[str], verbose: Optional[bool]):
+def cli(boot_environment: str, mountpoint: Optional[list], verbose: Optional[bool]):
     try:
         zedenv.lib.check.startup_check()
     except RuntimeError as err:
@@ -141,4 +141,13 @@ def cli(boot_environment: str, mountpoint: Optional[str], verbose: Optional[bool
             "message": f"Dataset already mounted to {dataset_mountpoint}\n"
         }, exit_on_error=True)
 
-    zedenv_mount(boot_environment, mountpoint[0], verbose, be_root)
+    real_mountpoint = None
+    if mountpoint:
+        if len(mountpoint) > 1:
+            ZELogger.log({
+                "level": "EXCEPTION",
+                "message": f"Boot environments can only view mounted to one location at once.\n"
+            }, exit_on_error=True)
+        real_mountpoint = mountpoint[0]
+
+    zedenv_mount(boot_environment, real_mountpoint, verbose, be_root)
