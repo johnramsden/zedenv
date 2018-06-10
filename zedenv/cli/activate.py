@@ -245,17 +245,26 @@ def zedenv_activate(boot_environment: str,
                            f"\n{err}\nStopping activation.\n"
             }, exit_on_error=True)
 
-    if not pyzfscmds.utility.dataset_exists(
-            be_requested) and not pyzfscmds.utility.is_clone(be_requested):
-        ZELogger.log({
-            "level": "EXCEPTION",
-            "message": f"Boot environment {boot_environment} doesn't exist'\n"
-        }, exit_on_error=True)
-    else:
-        ZELogger.verbose_log({
-            "level": "INFO",
-            "message": f"Boot environment {boot_environment} exists'\n"
-        }, verbose)
+    if not pyzfscmds.utility.dataset_exists(be_requested):
+        ds_is_clone = None
+        try:
+            ds_is_clone = pyzfscmds.utility.is_clone(be_requested)
+        except RuntimeError:
+            ZELogger.log({
+                "level": "EXCEPTION",
+                "message": f"Boot environment {boot_environment} doesn't exist'\n"
+            }, exit_on_error=True)
+
+        if not ds_is_clone:
+            ZELogger.log({
+                "level": "EXCEPTION",
+                "message": f"Boot environment {boot_environment} doesn't exist'\n"
+            }, exit_on_error=True)
+
+    ZELogger.verbose_log({
+        "level": "INFO",
+        "message": f"Boot environment {boot_environment} exists'\n"
+    }, verbose)
 
     if current_be == be_requested:
         ZELogger.verbose_log({
