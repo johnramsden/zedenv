@@ -1,13 +1,10 @@
 import shutil
 import os
-import re
 import tempfile
 
 import click
 
-import zedenv.lib.be
 import zedenv.plugins.configuration as plugin_config
-import zedenv.lib.system
 from zedenv.lib.logger import ZELogger
 
 
@@ -306,4 +303,22 @@ class SystemdBoot(plugin_config.Plugin):
             ZELogger.verbose_log({
                 "level": "INFO",
                 "message": f"Removed {dataset_kernels}.\n"
+            }, self.verbose)
+
+        real_entries_dir = os.path.join(self.zedenv_properties["esp"], "loader/entries")
+        real_bootloader_file = os.path.join(real_entries_dir, f"zedenv-{target}.conf")
+
+        if os.path.isfile(real_bootloader_file):
+            try:
+                os.remove(real_bootloader_file)
+            except PermissionError:
+                ZELogger.log({
+                    "level": "EXCEPTION",
+                    "message": (f"Require Privileges to remove "
+                                f"'{real_bootloader_file}'\n")
+
+                }, exit_on_error=True)
+            ZELogger.verbose_log({
+                "level": "INFO",
+                "message": f"Removed {real_bootloader_file}.\n"
             }, self.verbose)
