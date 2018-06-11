@@ -73,10 +73,10 @@ def cli(boot_environment: str, verbose: Optional[bool]):
         }, exit_on_error=True)
 
     if dataset_mountpoint == "/":
-            ZELogger.log({
-                "level": "EXCEPTION",
-                "message": f"Cannot Unmount root dataset.\n"
-            }, exit_on_error=True)
+        ZELogger.log({
+            "level": "EXCEPTION",
+            "message": f"Cannot Unmount root dataset.\n"
+        }, exit_on_error=True)
 
     if not dataset_mountpoint:
         ZELogger.log({

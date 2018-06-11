@@ -4,6 +4,7 @@ zedenv boot environment manager cli
 import os
 import signal
 import sys
+import subprocess
 import platform
 
 import click
@@ -18,7 +19,7 @@ signal.signal(signal.SIGINT, signal.default_int_handler)
 def print_version(ctx, param, value):
     if not value or ctx.resilient_parsing:
         return
-    click.echo(f"Version {zedenv.__version__}")
+    click.echo(f"Version {zedenv.get_release_version(zedenv.__version__)}")
     ctx.exit()
 
 

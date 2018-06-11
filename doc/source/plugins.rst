@@ -82,12 +82,12 @@ Alternate Mountpoint
 First, remount the ``$esp`` to a new location, the default is ``/mnt/efi``.
 
 If you would like to explicitly specify the mountpoint used, you can set the
-``org.zedenv:esp`` property on your current boot environment, and the plugin
+``org.zedenv.systemdboot:esp`` property on your current boot environment, and the plugin
 will use the specified location: 
 
 .. code-block:: shell
 
-    zfs set org.zedenv:esp='/mnt/efi' zpool/ROOT/default
+    zfs set org.zedenv.systemdboot:esp='/mnt/efi' zpool/ROOT/default
 
 Don't forget to change the mount point in ``/etc/fstab``.
 

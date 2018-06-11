@@ -1,6 +1,7 @@
 from setuptools import setup, find_packages
 
 from zedenv import __version__
+from zedenv import get_release_version
 
 tests_require = [
     'coverage',
@@ -27,7 +28,7 @@ def readme():
 
 setup(
     name='zedenv',
-    version=__version__,
+    version=get_release_version(__version__),
     description='Utility to manage Boot Environments using ZFS',
     long_description=readme(),
     url='http://github.com/johnramsden/zedenv',

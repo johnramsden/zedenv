@@ -43,7 +43,7 @@ Create a new boot environment.
 
 .. code-block:: shell
 
-    zedenv activate [OPTIONS] BOOT_ENVIRONMENT
+    zedenv create [OPTIONS] BOOT_ENVIRONMENT
 
 .. table::
 
@@ -70,6 +70,7 @@ Destroy a boot environment or snapshot.
      Option                                Description
     ===================================  =========================================================
      ``-v``, ``--verbose``                 Print verbose output.
+     ``-b``, ``--bootloader`` ``TEXT``     Use bootloader type.
      ``-y``, ``--noconfirm``               Assume yes in situations where confirmation is needed.
      ``-n``, ``--noop``                    Print what would be destroyed but don't apply.
      ``--help``                            Show this message and exit.

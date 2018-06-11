@@ -36,6 +36,11 @@ def size(boot_environment) -> int:
 
 
 def bootfs_for_pool(zpool: str) -> str:
+    """
+    Get the 'bootfs' dataset for a given zpool
+    :param zpool: Pool to get bootfs of.
+    :return: The name of the 'bootfs' dataset.
+    """
     bootfs_list = None
     try:
         bootfs_list = pyzfscmds.cmd.zpool_get(pool=zpool,
