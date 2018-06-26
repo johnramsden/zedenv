@@ -143,7 +143,7 @@ def zedenv_list(verbose: Optional[bool],
     boot_environments = configure_boot_environment_list(be_root, columns, scripting)
 
     for list_output in boot_environments:
-        ZELogger.log({"level": "INFO", "message": list_output}, verbose)
+        ZELogger.log({"level": "INFO", "message": list_output})
 
 
 @click.command(name="list",
