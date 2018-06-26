@@ -38,10 +38,10 @@ class Plugin(object):
     def plugin_property_error(self, prop):
         ZELogger.log({
             "level": "EXCEPTION",
-            "message": (f"To use the {self.bootloader} plugin, use default{prop}, or set props\n"
-                        f"To set it use the command (replacing with your pool and dataset)\n'"
-                        f"zfs set org.zedenv.{self.bootloader}:{prop}='<new mount>' "
-                        "zpool/ROOT/default\n")
+            "message": (f"To use the {self.bootloader} plugin, use the default setting '{prop}', "
+                        f"or set a different value\n. To set it use the command (replacing with "
+                        f"your pool and dataset)\n'zfs set "
+                        f"org.zedenv.{self.bootloader}:{prop}='<new mount>' zpool/ROOT/default\n")
         }, exit_on_error=True)
 
     def check_zedenv_properties(self):
