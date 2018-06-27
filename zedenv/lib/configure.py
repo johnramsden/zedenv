@@ -17,6 +17,20 @@ def get_plugins():
     return plugins
 
 
+def get_bootloader_properties():
+    plugins = get_plugins()
+    plugin_list = []
+
+    for p in plugins:
+        if platform.system().lower() in plugins[p].systems_allowed:
+            plugin_list.append({
+                "bootloader": plugins[p].bootloader,
+                "properties": plugins[p].allowed_properties
+            })
+
+    return plugin_list
+
+
 def get_bootloader(boot_environment: str,
                    old_boot_environment: str,
                    bootloader: str,

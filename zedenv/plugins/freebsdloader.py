@@ -13,6 +13,8 @@ class FreeBSDLoader(plugin_config.Plugin):
     systems_allowed = ["freebsd"]
     bootloader = "freebsdloader"
 
+    allowed_properties: tuple = ()
+
     def __init__(self, zedenv_data: dict):
 
         super().__init__(zedenv_data)
