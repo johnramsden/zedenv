@@ -1,29 +1,15 @@
 """Get boot environment properties cli"""
 
-from typing import Optional, List
+from typing import Optional
 
 import click
 
 import pyzfscmds.system.agnostic
 import pyzfscmds.cmd
 
-import zedenv.configuration
 import zedenv.lib.be
 import zedenv.lib.check
 from zedenv.lib.logger import ZELogger
-
-
-def format_get(get_line: list,
-               scripting: Optional[bool],
-               widths: List[int]) -> str:
-    """
-    Formats list into column separated string with tabs if scripting.
-    """
-    if scripting:
-        return "\t".join(get_line)
-    else:
-        fmt_line = ["{{: <{width}}}".format(width=w+1) for w in widths]
-        return " ".join(fmt_line).format(*get_line)
 
 
 def zedenv_get(zedenv_properties: Optional[list],
@@ -55,43 +41,14 @@ def zedenv_get(zedenv_properties: Optional[list],
         }, exit_on_error=True)
 
     prop_list = props.splitlines()
-    prop_output = []
 
     if not scripting:
-        prop_output.append(prop_list[0].split())
+        ZELogger.log({"level": "INFO", "message": prop_list[0]})
 
-    prop_list_props = []
-    for pr in prop_list:
-        split_prop = pr.split()
+    for p in prop_list:
+        split_prop = p.split()
         if split_prop[property_index].startswith("org.zedenv"):
-            prop_list_props.append(split_prop)
-
-    prop_output.extend(prop_list_props)
-
-    if not recursive:
-        props_unset = []
-        only_props = [j[property_index] for j in prop_list_props]
-        for cfg in zedenv.configuration.allowed_properties:
-            if f'org.zedenv:{cfg["property"]}' not in only_props:
-                props_unset.append(
-                    [f'org.zedenv:{cfg["property"]}', f'default ({cfg["default"]})'])
-
-        prop_output.extend(props_unset)
-
-    # Set minimum column width to name of column plus one
-    widths = [len(l) + 1 for l in columns]
-
-    # Check for largest column entry and use as width.
-    for upe in prop_output:
-        for i, w in enumerate(upe):
-            if len(w) > widths[i]:
-                widths[i] = len(w)
-
-    formatted_list_entries = [format_get(b, scripting, widths)
-                              for b in prop_output]
-
-    for k in formatted_list_entries:
-        ZELogger.log({"level": "INFO", "message": k})
+            ZELogger.log({"level": "INFO", "message": p})
 
 
 @click.command(name="get",
