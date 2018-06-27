@@ -1,4 +1,6 @@
-"""Get boot environment properties cli"""
+"""
+Set boot environment properties cli
+"""
 
 import click
 import pyzfscmds.cmd
@@ -143,7 +145,7 @@ def zedenv_get(zedenv_properties: Optional[list],
 
 
 @click.command(name="get",
-               help="Get all boot environment properties that are set.")
+               help="Print boot environment properties.")
 @click.option('--recursive', '-r',
               is_flag=True,
               help="Recursively get all zedenv properties from all datasets under ROOT.")
