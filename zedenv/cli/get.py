@@ -3,10 +3,12 @@
 import click
 import pyzfscmds.cmd
 import pyzfscmds.system.agnostic
+from typing import Optional, List, Dict
+
 import zedenv.configuration
 import zedenv.lib.be
 import zedenv.lib.check
-from typing import Optional, List
+import zedenv.lib.configure
 from zedenv.lib.logger import ZELogger
 
 
@@ -23,68 +25,118 @@ def format_get(get_line: list,
         return " ".join(fmt_line).format(*get_line)
 
 
+def get_set_properties(property_index: int,
+                       props: Optional[list],
+                       recursive: Optional[bool]) -> List[Dict]:
+    """
+    Get currently set zedenv props and return a list of dicts as:
+    [{ "property": ..., "value": ..., "name": ...}]
+    """
+    prop_table = []
+    for pl in props:
+        split_prop = pl.split()
+
+        if split_prop[property_index].startswith("org.zedenv"):
+
+            prop_dict = {
+                "property": split_prop[property_index],
+                "value": split_prop[property_index + 1]
+            }
+
+            if recursive:
+                prop_dict["name"] = split_prop[0]
+
+            prop_table.append(prop_dict)
+
+    return prop_table
+
+
 def zedenv_get(zedenv_properties: Optional[list],
                scripting: Optional[bool],
                recursive: Optional[bool],
+               defaults: Optional[bool],
                be_root: str):
-    property_index = 0
-    columns = ["property", "value"]
+    set_properties = []
+    if not defaults:
+        # Get currently set zedenv props
+        property_index = 0
+        columns = ["property", "value"]
 
-    zedenv_props = zedenv_properties if zedenv_properties else ["all"]
+        zedenv_props = zedenv_properties if zedenv_properties else ["all"]
 
-    if recursive:
-        property_index = property_index + 1
-        columns.insert(0, "name")
+        if recursive:
+            property_index = property_index + 1
+            columns.insert(0, "name")  # Include dataset if recursive
 
-    props = None
-    try:
-        props = pyzfscmds.cmd.zfs_get(be_root,
-                                      properties=zedenv_props,
-                                      scripting=scripting,
-                                      recursive=recursive,
-                                      columns=columns,
-                                      zfs_types=['filesystem'])
-    except RuntimeError as err:
-        ZELogger.log({
-            "level": "EXCEPTION",
-            "message": f"Failed to get zedenv properties\n{err}\n"
-        }, exit_on_error=True)
+        props = None
+        try:
+            props = pyzfscmds.cmd.zfs_get(be_root,
+                                          properties=zedenv_props,
+                                          scripting=scripting,
+                                          recursive=recursive,
+                                          columns=columns,
+                                          zfs_types=['filesystem'])
+        except RuntimeError as err:
+            ZELogger.log({
+                "level": "EXCEPTION",
+                "message": f"Failed to get zedenv properties\n{err}\n"
+            }, exit_on_error=True)
 
-    prop_list = props.splitlines()
-    prop_output = []
+        prop_list = props.splitlines()
 
-    if not scripting:
-        prop_output.append(prop_list[0].split())
+        if not scripting:
+            set_properties.append(prop_list[0].split())  # Title
 
-    prop_list_props = []
-    for pr in prop_list:
-        split_prop = pr.split()
-        if split_prop[property_index].startswith("org.zedenv"):
-            prop_list_props.append(split_prop)
+        set_properties_dicts = get_set_properties(property_index, prop_list, recursive)
 
-    prop_output.extend(prop_list_props)
+        # Add properties that are currently set
+        for item in set_properties_dicts:
+            line = []
+            if recursive:
+                line.append(item["name"])
+            line.extend([item["property"], item["value"]])
+            set_properties.append(line)
 
-    if not recursive:
-        props_unset = []
-        only_props = [j[property_index] for j in prop_list_props]
+    else:
+        set_properties.append(["PROPERTY", "DEFAULT", "DESCRIPTION"])
+        # Print defaults for regular properties
         for cfg in zedenv.configuration.allowed_properties:
-            if f'org.zedenv:{cfg["property"]}' not in only_props:
-                props_unset.append(
-                    [f'org.zedenv:{cfg["property"]}', f'default ({cfg["default"]})'])
+            if zedenv_properties:
+                if f'org.zedenv:{cfg["property"]}' in zedenv_properties:
+                    set_properties.append(
+                        [f'org.zedenv:{cfg["property"]}', cfg['default'], cfg['description']])
+            else:
+                set_properties.append(
+                    [f'org.zedenv:{cfg["property"]}', cfg['default'], cfg['description']])
 
-        prop_output.extend(props_unset)
+        # Print defaults for bootloader properties
+        for bl in zedenv.lib.configure.get_bootloader_properties():
+            for pcfg in bl['properties']:
+                if zedenv_properties:
+                    if f'org.zedenv.{bl["bootloader"]}:{pcfg["property"]}' in zedenv_properties:
+                        set_properties.append([
+                            f'org.zedenv.{bl["bootloader"]}:{pcfg["property"]}',
+                            pcfg['default'],
+                            pcfg['description']
+                        ])
+                else:
+                    set_properties.append([
+                        f'org.zedenv.{bl["bootloader"]}:{pcfg["property"]}',
+                        pcfg['default'],
+                        pcfg['description']
+                    ])
 
     # Set minimum column width to name of column plus one
-    widths = [len(l) + 1 for l in columns]
+    widths = [len(l) + 1 for l in set_properties[0]]
 
     # Check for largest column entry and use as width.
-    for upe in prop_output:
+    for upe in set_properties:
         for i, w in enumerate(upe):
             if len(w) > widths[i]:
                 widths[i] = len(w)
 
     formatted_list_entries = [format_get(b, scripting, widths)
-                              for b in prop_output]
+                              for b in set_properties]
 
     for k in formatted_list_entries:
         ZELogger.log({"level": "INFO", "message": k})
@@ -98,10 +150,14 @@ def zedenv_get(zedenv_properties: Optional[list],
 @click.option('--scripting', '-H',
               is_flag=True,
               help="Scripting output.")
+@click.option('--defaults', '-D',
+              is_flag=True,
+              help="Show default settings only.")
 @click.argument('zedenv_properties', nargs=-1, required=False)
 def cli(zedenv_properties: Optional[list],
         scripting: Optional[bool],
-        recursive: Optional[bool]):
+        recursive: Optional[bool],
+        defaults: Optional[bool]):
     try:
         zedenv.lib.check.startup_check()
     except RuntimeError as err:
@@ -110,4 +166,5 @@ def cli(zedenv_properties: Optional[list],
     zedenv_get(zedenv_properties,
                scripting,
                recursive,
+               defaults,
                zedenv.lib.be.root())
