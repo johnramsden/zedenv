@@ -1,8 +1,7 @@
-import shutil
+import click
 import os
 import re
-
-import click
+import shutil
 import zedenv.lib.be
 from zedenv.lib.logger import ZELogger
 
@@ -56,8 +55,8 @@ class Plugin(object):
                 "message": f"Checking prop: 'org.zedenv.{self.bootloader}:{prop}'"
             }, self.verbose)
             prop_val = zedenv.lib.be.get_property(
-                    "/".join([self.be_root, self.boot_environment]),
-                    f"org.zedenv.{self.bootloader}:{prop}")
+                "/".join([self.be_root, self.boot_environment]),
+                f"org.zedenv.{self.bootloader}:{prop}")
 
             if prop_val is not None and prop_val != "-":
                 self.zedenv_properties[prop] = prop_val

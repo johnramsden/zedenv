@@ -1,15 +1,11 @@
 """List boot environments cli"""
 
-import sys
-from typing import Optional, List
-
 import click
-
-import pyzfscmds.utility as zfs_utility
 import pyzfscmds.system.agnostic
-
+import pyzfscmds.utility as zfs_utility
 import zedenv.lib.be
 import zedenv.lib.check
+from typing import Optional, List
 from zedenv.lib.logger import ZELogger
 
 
@@ -22,7 +18,7 @@ def format_boot_environment(be_list_line: list,
     if scripting:
         return "\t".join(be_list_line)
     else:
-        fmt_line = ["{{: <{width}}}".format(width=w+1) for w in widths]
+        fmt_line = ["{{: <{width}}}".format(width=(w + 1)) for w in widths]
         return " ".join(fmt_line).format(*be_list_line)
 
 

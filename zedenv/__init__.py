@@ -11,8 +11,8 @@ def vcs_release(version: str):
     """
     try:
         git_hash = subprocess.check_output(
-                        ['git', 'rev-parse', '--short', 'HEAD'],
-                        universal_newlines=True, stderr=subprocess.PIPE)
+            ['git', 'rev-parse', '--short', 'HEAD'],
+            universal_newlines=True, stderr=subprocess.PIPE)
     except subprocess.CalledProcessError:
         return version
 
@@ -26,8 +26,8 @@ def get_release_version(version: str):
     has_tags = None
     try:
         has_tags = subprocess.check_output(
-                                    ['git', 'tag', '-l', '--points-at', 'HEAD'],
-                                    universal_newlines=True, stderr=subprocess.PIPE)
+            ['git', 'tag', '-l', '--points-at', 'HEAD'],
+            universal_newlines=True, stderr=subprocess.PIPE)
     except subprocess.CalledProcessError:
         pass
 

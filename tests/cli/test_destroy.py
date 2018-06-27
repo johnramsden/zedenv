@@ -1,14 +1,12 @@
 """Test zedenv create command"""
 
 import datetime
-
 import pytest
 import pyzfscmds.utility as zfs_utility
-
-import zedenv.cli.destroy
-import zedenv.cli.create
-import zedenv.lib.check
 import zedenv.cli.activate
+import zedenv.cli.create
+import zedenv.cli.destroy
+import zedenv.lib.check
 
 require_root_dataset = pytest.mark.require_root_dataset
 require_unsafe = pytest.mark.require_unsafe
@@ -68,12 +66,13 @@ def test_boot_environment_destroy_fails(root_dataset, created_boot_environment):
     bootloader = None
 
     zedenv.cli.activate.zedenv_activate(created_boot_environment,
-                                        parent_dataset,  verbose, bootloader, noconfirm, noop)
+                                        parent_dataset, verbose, bootloader, noconfirm, noop)
 
     with pytest.raises(SystemExit):
         zedenv.cli.destroy.zedenv_destroy(created_boot_environment,
                                           parent_dataset,
                                           root_dataset,
+                                          bootloader,
                                           verbose,
                                           noconfirm,
                                           noop)
