@@ -1,15 +1,12 @@
 """Get boot environment properties cli"""
 
-from typing import Optional, List
-
 import click
-
-import pyzfscmds.system.agnostic
 import pyzfscmds.cmd
-
+import pyzfscmds.system.agnostic
 import zedenv.configuration
 import zedenv.lib.be
 import zedenv.lib.check
+from typing import Optional, List
 from zedenv.lib.logger import ZELogger
 
 
@@ -22,7 +19,7 @@ def format_get(get_line: list,
     if scripting:
         return "\t".join(get_line)
     else:
-        fmt_line = ["{{: <{width}}}".format(width=w+1) for w in widths]
+        fmt_line = ["{{: <{width}}}".format(width=(w + 1)) for w in widths]
         return " ".join(fmt_line).format(*get_line)
 
 
@@ -30,7 +27,6 @@ def zedenv_get(zedenv_properties: Optional[list],
                scripting: Optional[bool],
                recursive: Optional[bool],
                be_root: str):
-
     property_index = 0
     columns = ["property", "value"]
 
@@ -106,7 +102,6 @@ def zedenv_get(zedenv_properties: Optional[list],
 def cli(zedenv_properties: Optional[list],
         scripting: Optional[bool],
         recursive: Optional[bool]):
-
     try:
         zedenv.lib.check.startup_check()
     except RuntimeError as err:

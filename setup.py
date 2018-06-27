@@ -17,7 +17,7 @@ dev_require = [
 ]
 
 dependency_links = [
-     'git+https://github.com/johnramsden/pyzfscmds#egg=pyzfscmds'
+    'git+https://github.com/johnramsden/pyzfscmds#egg=pyzfscmds'
 ]
 
 
@@ -36,9 +36,9 @@ setup(
     author_email='johnramsden@riseup.net',
     license='BSD-3-Clause',
     classifiers=[
-      'Development Status :: 3 - Alpha',
-      'License :: OSI Approved :: BSD License',
-      'Programming Language :: Python :: 3.6',
+        'Development Status :: 3 - Alpha',
+        'License :: OSI Approved :: BSD License',
+        'Programming Language :: Python :: 3.6',
     ],
     keywords='cli',
     packages=find_packages(exclude=["*tests*", "test_*"]),

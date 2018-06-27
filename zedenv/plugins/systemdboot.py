@@ -1,17 +1,23 @@
-import shutil
-import os
-import tempfile
-
 import click
-
+import os
+import shutil
+import tempfile
 import zedenv.plugins.configuration as plugin_config
+from typing import Tuple
 from zedenv.lib.logger import ZELogger
 
 
 class SystemdBoot(plugin_config.Plugin):
-
     systems_allowed = ["linux"]
     bootloader = "systemdboot"
+
+    allowed_properties: Tuple[dict] = (
+        {
+            "property": f"esp",
+            "description": "Set location for esp.",
+            "default": "/mnt/efi"
+        },
+    )
 
     def __init__(self, zedenv_data: dict):
 
@@ -26,7 +32,8 @@ class SystemdBoot(plugin_config.Plugin):
         self.new_entry = f"{self.entry_prefix}-{self.boot_environment}"
 
         # Set defaults
-        self.zedenv_properties["esp"] = "/mnt/efi"
+        for pr in self.allowed_properties:
+            self.zedenv_properties[pr["property"]] = pr["default"]
 
         self.check_zedenv_properties()
 
@@ -69,8 +76,7 @@ class SystemdBoot(plugin_config.Plugin):
         ]
 
         config_matches = [en.split(".conf")[0] for en in config_entries
-                          if en.split(".conf")[0] == (
-                                  self.old_entry or self.new_entry)]
+                          if en.split(".conf")[0] == (self.old_entry or self.new_entry)]
 
         old_conf = True if self.old_entry in config_matches else False
         new_conf = True if self.new_entry in config_matches else False
@@ -121,11 +127,11 @@ class SystemdBoot(plugin_config.Plugin):
 
                 if not self.noconfirm:
                     if click.confirm(
-                           "Would you like to edit the generated bootloader config?",
+                            "Would you like to edit the generated bootloader config?",
                             default=True):
                         click.edit(filename=temp_bootloader_file)
 
-    def modify_bootloader(self, temp_esp: str,):
+    def modify_bootloader(self, temp_esp: str, ):
 
         real_kernel_dir = os.path.join(self.zedenv_properties["esp"], self.env_dir)
         temp_kernel_dir = os.path.join(temp_esp, self.env_dir)
@@ -196,10 +202,10 @@ class SystemdBoot(plugin_config.Plugin):
                 }, exit_on_error=True)
 
         if not os.path.isfile(real_loader_conf_path):
-                ZELogger.log({
-                    "level": "EXCEPTION",
-                    "message": f"Missing file: {real_loader_conf_path}\n"
-                }, exit_on_error=True)
+            ZELogger.log({
+                "level": "EXCEPTION",
+                "message": f"Missing file: {real_loader_conf_path}\n"
+            }, exit_on_error=True)
 
         try:
             shutil.copy(real_loader_conf_path, temp_loader_conf_path)
@@ -218,7 +224,7 @@ class SystemdBoot(plugin_config.Plugin):
             conf_list = loader_conf.readlines()
 
         line_num = next((l for l, val in enumerate(conf_list)
-                        if val.split(' ', 1)[0] == "default"), None)
+                         if val.split(' ', 1)[0] == "default"), None)
 
         if line_num:
             conf_list[line_num] = f"default    {self.new_entry}\n"
