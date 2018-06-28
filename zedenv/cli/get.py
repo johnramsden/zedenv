@@ -140,8 +140,7 @@ def zedenv_get(zedenv_properties: Optional[list],
     formatted_list_entries = [format_get(b, scripting, widths)
                               for b in set_properties]
 
-    for k in formatted_list_entries:
-        ZELogger.log({"level": "INFO", "message": k})
+    return formatted_list_entries
 
 
 @click.command(name="get",
@@ -160,13 +159,17 @@ def cli(zedenv_properties: Optional[list],
         scripting: Optional[bool],
         recursive: Optional[bool],
         defaults: Optional[bool]):
+
     try:
         zedenv.lib.check.startup_check()
     except RuntimeError as err:
         ZELogger.log({"level": "EXCEPTION", "message": err}, exit_on_error=True)
 
-    zedenv_get(zedenv_properties,
-               scripting,
-               recursive,
-               defaults,
-               zedenv.lib.be.root())
+    formatted_list_entries = zedenv_get(zedenv_properties,
+                                        scripting,
+                                        recursive,
+                                        defaults,
+                                        zedenv.lib.be.root())
+
+    for k in formatted_list_entries:
+        ZELogger.log({"level": "INFO", "message": k})
