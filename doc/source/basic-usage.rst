@@ -40,7 +40,7 @@ bootloader plugin will be used without you having to specify.
 
 .. code-block:: shell
 
-    $ zfs set org.zedenv:bootloader=<bootloader plugin> zpool/ROOT
+    $ zedenv set org.zedenv:bootloader=<bootloader plugin>
 
 Plugins available for your system can be listed with ``zedenv --plugins``. 
 
