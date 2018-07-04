@@ -65,9 +65,11 @@ Usage information can be given at any time by running ``zedenv --help``.
     activate  Activate a boot environment.
     create    Create a boot environment.
     destroy   Destroy a boot environment or snapshot.
+    get       Get boot environment properties.
     list      List all boot environments.
     mount     Mount a boot environment temporarily.
     rename    Rename a boot environment.
+    set       Set boot environment properties.
     umount    Unmount a boot environment.
 
 More specific information about a specific subcommand can be requested as well.
