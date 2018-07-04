@@ -8,9 +8,11 @@ The following commands are available
 * ``activate`` - Activate a boot environment.
 * ``create`` - Create a boot environment.
 * ``destroy`` - Destroy a boot environment or snapshot.
+* ``get`` - Print boot environment properties.
 * ``list`` - List all boot environments.
 * ``mount`` - Mount a boot environment temporarily.
 * ``rename`` - Rename a boot environment.
+* ``set`` - Set boot environment properties.
 * ``umount`` - Unmount a boot environment.
 
 Activate
@@ -76,6 +78,26 @@ Destroy a boot environment or snapshot.
      ``--help``                            Show this message and exit.
     ===================================  =========================================================
 
+Get
+-------
+
+Print boot environment properties.
+
+.. code-block:: shell
+
+    zedenv get [OPTIONS] BOOT_ENVIRONMENT
+
+.. table::
+
+    ===============================================================================================
+     Option                     Description
+    ========================  =====================================================================
+     `-r``, ``--recursive``     Recursively get all zedenv properties from all datasets under ROOT.
+     ``-H``, ``--scripting``    Scripting output.
+     ``-D``, ``--defaults``     Show default settings only.
+     ``--help``                 Show this message and exit.
+    ========================== ====================================================================
+
 List
 ----
 
@@ -97,7 +119,6 @@ List all boot environments.
      ``-O``, ``--origin``                  Display origin.
      ``--help``                            Show this message and exit.
     ===================================  =========================================================
-
 
 Mount
 -----
@@ -136,8 +157,23 @@ Rename a boot environment.
      ``--help``                            Show this message and exit.
     ===================================  =========================================================
 
+Set
+-------
 
+Set boot environment properties.
 
+.. code-block:: shell
+
+    zedenv set [OPTIONS] BOOT_ENVIRONMENT
+
+.. table::
+
+    ===================================  =========================================================
+     Option                                Description
+    ===================================  =========================================================
+     ``-v``, ``--verbose``                 Print verbose output.
+     ``--help``                            Show this message and exit.
+    ===================================  =========================================================
 
 Umount
 ------
