@@ -7,7 +7,7 @@ zedenv
 
 ZFS boot environment manager
 
-Documentation for the project can be found at `readthedocs <zedenv.readthedocs.io>`_.
+Documentation for the project can be found at `readthedocs <https://zedenv.readthedocs.io>`_.
 
 ``zedenv`` is still experimental and should not be used on production systems.
 
