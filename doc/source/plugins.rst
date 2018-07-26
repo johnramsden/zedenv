@@ -87,7 +87,7 @@ will use the specified location:
 
 .. code-block:: shell
 
-    zfs set org.zedenv.systemdboot:esp='/mnt/efi' zpool/ROOT/default
+    zedenv set org.zedenv.systemdboot:esp='/mnt/efi'
 
 Don't forget to change the mount point in ``/etc/fstab``.
 
