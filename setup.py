@@ -1,7 +1,6 @@
 from setuptools import setup, find_packages
 
 from zedenv import __version__
-from zedenv import get_release_version
 
 tests_require = [
     'coverage',
@@ -28,7 +27,7 @@ def readme():
 
 setup(
     name='zedenv',
-    version=get_release_version(__version__),
+    version=__version__,
     description='Utility to manage Boot Environments using ZFS',
     long_description=readme(),
     url='http://github.com/johnramsden/zedenv',
@@ -36,9 +35,10 @@ setup(
     author_email='johnramsden@riseup.net',
     license='BSD-3-Clause',
     classifiers=[
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 3 - Beta',
         'License :: OSI Approved :: BSD License',
         'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
     ],
     keywords='cli',
     packages=find_packages(exclude=["*tests*", "test_*"]),
