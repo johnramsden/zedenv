@@ -214,10 +214,6 @@ def zedenv_activate(boot_environment: str,
             "message": f"Failed to get active boot environment'\n"
         }, exit_on_error=True)
 
-    bootloader_set = zedenv.lib.be.get_property(be_requested, "org.zedenv:bootloader")
-    if not bootloader and bootloader_set:
-        bootloader = bootloader_set if bootloader_set != '-' else None
-
     bootloader_plugin = None
     if bootloader:
         bootloader_plugin = zedenv.lib.configure.get_bootloader(
@@ -335,16 +331,23 @@ def cli(boot_environment: str,
         noconfirm: Optional[bool],
         noop: Optional[bool]):
 
-    if noconfirm and not bootloader:
-        sys.exit("The '--noconfirm/-y' flag requires the bootloader option '--bootloader/-b'.")
-
     try:
         zedenv.lib.check.startup_check()
     except RuntimeError as err:
         ZELogger.log({"level": "EXCEPTION", "message": err}, exit_on_error=True)
 
+    boot_environment_root = zedenv.lib.be.root()
+
+    bootloader_set = zedenv.lib.be.get_property(
+        f"{boot_environment_root}/{boot_environment}", "org.zedenv:bootloader")
+    if not bootloader and bootloader_set:
+        bootloader = bootloader_set if bootloader_set != '-' else None
+
+    if noconfirm and not bootloader:
+        sys.exit("The '--noconfirm/-y' flag requires the bootloader option '--bootloader/-b'.")
+
     zedenv_activate(boot_environment,
-                    zedenv.lib.be.root(),
+                    boot_environment_root,
                     verbose,
                     bootloader,
                     noconfirm,
