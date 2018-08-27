@@ -1,8 +1,8 @@
 zedenv Boot Environment Manager
 ===============================
 
-``zedenv`` is a utility to manage Boot Environments using ZFS. ``zedenv`` is
-still in the alpha stage on Linux and FreeBSD. Take caution when using.
+``zedenv`` is a utility to manage Boot Environments using ZFS on Linux and FreeBSD. ``zedenv`` is
+still in the beta stage, take caution when using.
 
 Documentation
 -------------
