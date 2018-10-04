@@ -1,0 +1,27 @@
+name: zedenv
+version: 0.3.1
+summary: zedenv
+base: core18
+
+description: |
+  ZFS boot environment manager
+
+grade: devel
+confinement: classic
+
+apps:
+  zedenv:
+    command: bin/zedenv
+
+parts:
+  setup:
+    plugin: python
+    python-version: python3
+  zedenv:
+    after: [setup]
+    plugin: python
+    python-version: python3
+    process-dependency-links: true
+    python-packages:
+      - git+https://github.com/johnramsden/pyzfscmds.git#egg=pyzfscmds
+    source: https://github.com/johnramsden/zedenv.git

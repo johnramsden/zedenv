@@ -58,6 +58,9 @@ Pipfile.lock
 .vscode/
 
 /packaging/arch/*
+/packaging/snap/*
+!packaging/snapcraft.yaml
+!packaging/Dockerfile
 !packaging/arch/zedenv
 !packaging/arch/PKGBUILD
 !packaging/arch/PKGBUILD-git
