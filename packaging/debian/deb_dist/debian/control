@@ -1,0 +1,36 @@
+Source: zedenv
+Maintainer: John Ramsden <johnramsden@riseup.net>
+Section: python
+Priority: optional
+Build-Depends: python3-setuptools, python3-all, debhelper (>= 7.4.3)
+Standards-Version: 3.9.1
+
+
+
+
+
+Package: python3-zedenv
+Architecture: all
+Depends: ${misc:Depends}, ${python3:Depends}
+Description: Utility to manage Boot Environments using ZFS
+ ======
+ zedenv
+ ======
+ .
+ .. image:: https://travis-ci.com/johnramsden/zedenv.svg
+     :target: https://travis-ci.com/johnramsden/zedenv
+ .
+ ZFS boot environment manager
+ .
+ Documentation for the project can be found at `readthedocs <https://zedenv.readthedocs.io>`_.
+ .
+ ``zedenv`` is still experimental and should not be used on production systems.
+ .
+ Install
+ =======
+ .
+ ``zedenv`` requires python 3.6+, `pyzfscmds <https://github.com/johnramsden/pyzfscmds>`_, and ZFS running as the root
+ filesystem.
+ .
+ The system should also be configured in the format:
+
