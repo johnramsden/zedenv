@@ -316,7 +316,13 @@ def zedenv_destroy(target: str,
             destroy_origin_snapshots(destroy_dataset, be_pool, origin_snaps, noop, verbose)
 
     if bootloader:
-        bootloader_plugin.post_destroy(target)
+        try:
+            bootloader_plugin.post_destroy(target)
+        except AttributeError:
+            ZELogger.verbose_log({
+                "level": "INFO",
+                "message": f"Tried to run plugin's 'post destroy', not implemented.\n"
+            }, verbose)
 
     ZELogger.verbose_log({
         "level": "INFO",

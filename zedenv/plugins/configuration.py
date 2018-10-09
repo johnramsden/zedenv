@@ -232,3 +232,6 @@ class Plugin(object):
 
     def mid_activate(self, be_mountpoint: str):
         pass
+
+    def post_destroy(self, target):
+        pass
