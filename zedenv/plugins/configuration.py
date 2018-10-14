@@ -39,8 +39,8 @@ class Plugin(object):
             "level": "EXCEPTION",
             "message": (f"To use the {self.bootloader} plugin, use the default setting '{prop}', "
                         f"or set a different value\n. To set it use the command (replacing with "
-                        f"your pool and dataset)\n'zfs set "
-                        f"org.zedenv.{self.bootloader}:{prop}='<new mount>' zpool/ROOT/default\n")
+                        f"your pool and dataset)\n'zedenv set "
+                        f"org.zedenv.{self.bootloader}:{prop}='<new mount>'\n")
         }, exit_on_error=True)
 
     def check_zedenv_properties(self):
@@ -181,9 +181,8 @@ class Plugin(object):
         else:
             ZELogger.log({
                 "level": "INFO",
-                "message": (f"Couldn't find bindmounted directory to replace, your system "
-                            "may not be configured for boot environments with bindmounted "
-                            "'/boot'.")
+                "message": (f"Couldn't find directory to replace in fstab, your system "
+                            "may not be configured correctly for boot environments.")
             })
 
         if not self.noop:
