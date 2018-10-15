@@ -109,3 +109,12 @@ This will make it the Boot Environment used on reboot.
 This can be shown with a list, command. The boot environment currently being used will
 have a 'N' in the active column signifying the boot environment is being used now.
 An 'R' in the active column means this environment will be used on reboot.
+
+Bootloader Plugins
+==================
+
+Bootloader plugins are available for:
+
+* Systemd-boot 
+* FreeBSD loader 
+* GRUB (via `external plugin <https://github.com/johnramsden/zedenv-grub/>`_)
