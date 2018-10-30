@@ -1,5 +1,6 @@
 import click
 import os
+import re
 import shutil
 import tempfile
 import zedenv.plugins.configuration as plugin_config
@@ -44,6 +45,24 @@ class SystemdBoot(plugin_config.Plugin):
 
         if not os.path.isdir(self.zedenv_properties["esp"]):
             self.plugin_property_error(self.zedenv_properties)
+
+    @staticmethod
+    def __config_replace(config: list, regex: str, regex_replace: str) -> list:
+        new_conf_list = list(config)
+
+        target = re.compile(regex)
+
+        conf_matches = []
+        # Find match lines
+        for i, m in enumerate(new_conf_list):
+            if target.search(m):
+                conf_matches += [(i, target.search(m))]
+
+        for l in conf_matches:
+            if l[1]:
+                new_conf_list[l[0]] = re.sub(regex, regex_replace, config[l[0]])
+
+        return new_conf_list
 
     def edit_bootloader_entry(self, temp_esp: str):
         temp_entries_dir = os.path.join(temp_esp, "loader/entries")
@@ -107,8 +126,28 @@ class SystemdBoot(plugin_config.Plugin):
                 with open(real_bootloader_file, "r") as old_conf:
                     old_conf_list = old_conf.readlines()
 
-                new_entry_list = [l.replace(self.old_boot_environment, self.boot_environment)
-                                  for l in old_conf_list]
+                # replace title
+                replace_title_pattern = r'(title)(\s*)(.*)({boot_env})(.*$)'.format(
+                    boot_env=self.old_boot_environment)
+
+                new_conf_list = self.__config_replace(old_conf_list, replace_title_pattern,
+                                                      r"\1\2\3" + self.boot_environment + r"\5")
+
+                # First replace 'linux, initrd' entries
+                replace_linux_pattern = (
+                    r'(linux|initrd)(\s*)(/env/zedenv-)({boot_env})(/.*$)'
+                ).format(boot_env=self.old_boot_environment)
+
+                new_conf_list = self.__config_replace(new_conf_list, replace_linux_pattern,
+                                                      r"\1\2\3" + self.boot_environment + r"\5")
+
+                # Replace dataset
+                replace_ds_pattern = r'(options\s*.*zfs=)({boot_env})(\s*.*$)'.format(
+                    boot_env=f"{self.be_root}/{self.old_boot_environment}")
+
+                new_entry_list = self.__config_replace(
+                    new_conf_list, replace_ds_pattern,
+                    r"\1" + f"{self.be_root}/{self.boot_environment}" + r"\3")
 
             else:
                 entry_guess_full = '\n'.join(entry_guess_list)
@@ -124,6 +163,11 @@ class SystemdBoot(plugin_config.Plugin):
             if not self.noop:
                 with open(temp_bootloader_file, "w") as boot_conf:
                     boot_conf.writelines(new_entry_list)
+
+                ZELogger.log({
+                    "level": "INFO",
+                    "message": f"Replacing old entry with:\n{''.join(new_entry_list)}.\n"
+                })
 
                 if not self.noconfirm:
                     if click.confirm(
@@ -285,8 +329,6 @@ class SystemdBoot(plugin_config.Plugin):
             self.recurse_move(t_esp, self.zedenv_properties["esp"])
 
             self.edit_bootloader_default(t_esp, overwrite=True)
-
-        # TODO: self.cleanup_entries()
 
     def mid_activate(self, be_mountpoint: str):
         ZELogger.verbose_log({
