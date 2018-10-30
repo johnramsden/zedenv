@@ -267,11 +267,11 @@ class SystemdBoot(plugin_config.Plugin):
         with open(temp_loader_conf_path, "r") as loader_conf:
             conf_list = loader_conf.readlines()
 
-        line_num = next((l for l, val in enumerate(conf_list)
-                         if val.split(' ', 1)[0] == "default"), None)
+        replace_loader_pattern = r'(default)(\s*)(zedenv-{boot_env})(.*$)'.format(
+            boot_env=self.old_boot_environment)
 
-        if line_num:
-            conf_list[line_num] = f"default    {self.new_entry}\n"
+        conf_list = self.__config_replace(conf_list, replace_loader_pattern,
+                                          r"\1\2" + f"zedenv-{self.boot_environment}" + r"\4")
 
         if not self.noop:
             if os.path.isfile(real_loader_conf_path):
