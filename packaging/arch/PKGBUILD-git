@@ -1,7 +1,7 @@
 # Maintainer: John Ramsden <johnramsden [at] riseup [dot] net>
 
 pkgname=zedenv-git
-pkgver=r103.0f21e17
+pkgver=r148.d7d00f2
 pkgrel=1
 pkgdesc="Utility to manage Boot Environments using ZFS"
 arch=('any')

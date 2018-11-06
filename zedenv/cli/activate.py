@@ -1,6 +1,7 @@
 """List boot environments cli"""
 
 import sys
+import errno
 
 import click
 
@@ -346,19 +347,35 @@ def cli(boot_environment: str,
     except RuntimeError as err:
         ZELogger.log({"level": "EXCEPTION", "message": err}, exit_on_error=True)
 
-    boot_environment_root = zedenv.lib.be.root()
+    try:
+        with zedenv.lib.check.Pidfile() as pf:
 
-    bootloader_set = zedenv.lib.be.get_property(
-        f"{boot_environment_root}/{boot_environment}", "org.zedenv:bootloader")
-    if not bootloader and bootloader_set:
-        bootloader = bootloader_set if bootloader_set != '-' else None
+            boot_environment_root = zedenv.lib.be.root()
 
-    if noconfirm and not bootloader:
-        sys.exit("The '--noconfirm/-y' flag requires the bootloader option '--bootloader/-b'.")
+            bootloader_set = zedenv.lib.be.get_property(
+                f"{boot_environment_root}/{boot_environment}", "org.zedenv:bootloader")
+            if not bootloader and bootloader_set:
+                bootloader = bootloader_set if bootloader_set != '-' else None
 
-    zedenv_activate(boot_environment,
-                    boot_environment_root,
-                    verbose,
-                    bootloader,
-                    noconfirm,
-                    noop)
+            if noconfirm and not bootloader:
+                sys.exit(
+                    "The '--noconfirm/-y' flag requires the bootloader option '--bootloader/-b'.")
+
+            zedenv_activate(boot_environment,
+                            boot_environment_root,
+                            verbose,
+                            bootloader,
+                            noconfirm,
+                            noop)
+
+    except IOError as e:
+        if e[0] == errno.EPERM:
+            ZELogger.log({
+                "level": "EXCEPTION", "message":
+                    "You need root permissions to activate"
+            }, exit_on_error=True)
+    except zedenv.lib.check.ProcessRunningException as pr:
+        ZELogger.log({
+            "level": "EXCEPTION", "message":
+                f"Already running activate.\n {pr}"
+        }, exit_on_error=True)
