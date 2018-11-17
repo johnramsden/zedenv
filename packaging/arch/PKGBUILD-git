@@ -2,8 +2,8 @@
 
 pkgname=zedenv-git
 pkgver=r148.d7d00f2
-pkgrel=1
-pkgdesc="Utility to manage Boot Environments using ZFS"
+pkgrel=2
+pkgdesc="Utility to manage ZFS Boot Environments"
 arch=('any')
 url="http://github.com/johnramsden/zedenv"
 license=('BSD' 'custom:BSD 3 clause')
@@ -13,6 +13,7 @@ source=('zedenv::git+https://github.com/johnramsden/zedenv#branch=master')
 md5sums=('SKIP')
 conflicts=('zedenv')
 provides=('zedenv')
+optdepends=('zedenv-grub: zedenv plugin for GRUB')
 
 pkgver() {
 	cd "${srcdir}/${pkgname%-git}"
