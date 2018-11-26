@@ -23,7 +23,7 @@ def zedenv_umount(boot_environment: str, verbose: bool, be_root: str):
                                                             sort_properties_descending=['name'],
                                                             recursive=True,
                                                             columns=['name'])
-    except RuntimeError:
+    except RuntimeError as e:
         ZELogger.log({
             "level": "EXCEPTION",
             "message": f"Failed to get list of datasets for '{boot_environment}'.\n{e}"

@@ -168,7 +168,7 @@ def apply_settings_to_child_datasets(be_child_datasets_list, be_requested, verbo
         if be_requested == ds:
             try:
                 pyzfscmds.cmd.zfs_set(ds, canmount_setting)
-            except RuntimeError:
+            except RuntimeError as e:
                 ZELogger.log({
                     "level": "EXCEPTION",
                     "message": f"Failed to set {canmount_setting} for {ds}\n{e}\n"
@@ -177,7 +177,7 @@ def apply_settings_to_child_datasets(be_child_datasets_list, be_requested, verbo
             if pyzfscmds.utility.is_clone(ds):
                 try:
                     pyzfscmds.cmd.zfs_promote(ds)
-                except RuntimeError:
+                except RuntimeError as e:
                     ZELogger.log({
                         "level": "EXCEPTION",
                         "message": f"Failed to promote BE {ds}\n{e}\n"
@@ -232,19 +232,20 @@ def zedenv_activate(boot_environment: str,
         except RuntimeWarning as err:
             ZELogger.verbose_log({
                 "level": "WARNING",
-                "message": f"During {plugin.bootloader} pre activate the following occurred:\n"
-                           f"\n{err}\nContinuing activation.\n"
+                "message": f"During {bootloader_plugin.bootloader} pre activate the following "
+                           f"occurred:\n\n{err}\nContinuing activation.\n"
             }, verbose)
         except RuntimeError as err:
             ZELogger.log({
                 "level": "EXCEPTION",
-                "message": f"During {plugin.bootloader} pre activate the following occurred:\n"
-                           f"\n{err}\nStopping activation.\n"
+                "message": f"During {bootloader_plugin.bootloader} pre activate the following "
+                           f"occurred:\n\n{err}\nStopping activation.\n"
             }, exit_on_error=True)
         except AttributeError:
             ZELogger.verbose_log({
                 "level": "INFO",
-                "message": f"Tried to run {plugin.bootloader} 'pre activate', not implemented.\n"
+                "message": f"Tried to run {bootloader_plugin.bootloader} 'pre activate', not "
+                           "implemented.\n"
             }, verbose)
 
     if not pyzfscmds.utility.dataset_exists(be_requested):
@@ -306,19 +307,20 @@ def zedenv_activate(boot_environment: str,
         except RuntimeWarning as err:
             ZELogger.verbose_log({
                 "level": "WARNING",
-                "message": f"During {plugin.bootloader} post activate the following occurred:\n"
-                           f"\n{err}\nContinuing activation.\n"
+                "message": f"During {bootloader_plugin.bootloader} post activate the following"
+                           f" occurred:\n\n{err}\nContinuing activation.\n"
             }, verbose)
         except RuntimeError as err:
             ZELogger.log({
                 "level": "EXCEPTION",
-                "message": f"During {plugin.bootloader} post activate the following occurred:\n"
-                           f"\n{err}\nStopping activation.\n"
+                "message": f"During {bootloader_plugin.bootloader} post activate the following "
+                           f"occurred:\n\n{err}\nStopping activation.\n"
             }, exit_on_error=True)
         except AttributeError:
             ZELogger.verbose_log({
                 "level": "INFO",
-                "message": f"Tried to run {plugin.bootloader} 'post activate', not implemented.\n"
+                "message": f"Tried to run {bootloader_plugin.bootloader} 'post activate', "
+                           f"not implemented.\n"
             }, verbose)
 
 

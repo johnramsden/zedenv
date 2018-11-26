@@ -63,7 +63,7 @@ def get_clone_origin(destroy_dataset: str) -> Optional[str]:
         origin_property = pyzfscmds.cmd.zfs_get(destroy_dataset,
                                                 columns=['value'],
                                                 properties=['origin'])
-    except RuntimeError:
+    except RuntimeError as e:
         ZELogger.log({
             "level": "EXCEPTION",
             "message": f"Failed to get origin of {destroy_dataset}\n{e}\n"
@@ -264,7 +264,7 @@ def zedenv_destroy(target: str,
                 if not noop:
                     try:
                         pyzfscmds.cmd.zfs_promote(ds)
-                    except RuntimeError:
+                    except RuntimeError as e:
                         ZELogger.log({
                             "level": "EXCEPTION",
                             "message": f"Failed to promote {ds}\n{e}\n"
