@@ -126,28 +126,33 @@ class SystemdBoot(plugin_config.Plugin):
                 with open(real_bootloader_file, "r") as old_conf:
                     old_conf_list = old_conf.readlines()
 
+                old_be_string = str(self.old_boot_environment)
+                be_string = str(self.boot_environment)
+
                 # replace title
                 replace_title_pattern = r'(title)(\s*)(.*)({boot_env})(.*$)'.format(
-                    boot_env=self.old_boot_environment)
+                    boot_env=old_be_string)
 
-                new_conf_list = self.__config_replace(old_conf_list, replace_title_pattern,
-                                                      r"\1\2\3" + self.boot_environment + r"\5")
+                new_conf_list = self.__config_replace(
+                    old_conf_list, replace_title_pattern,
+                    r"\g<1>\g<2>\g<3>" + be_string + r"\g<5>")
 
                 # First replace 'linux, initrd' entries
                 replace_linux_pattern = (
                     r'(linux|initrd)(\s*)(/env/zedenv-)({boot_env})(/.*$)'
-                ).format(boot_env=self.old_boot_environment)
+                ).format(boot_env=str(old_be_string))
 
-                new_conf_list = self.__config_replace(new_conf_list, replace_linux_pattern,
-                                                      r"\1\2\3" + self.boot_environment + r"\5")
+                new_conf_list = self.__config_replace(
+                    new_conf_list, replace_linux_pattern,
+                    r"\g<1>\g<2>\g<3>" + be_string + r"\g<5>")
 
                 # Replace dataset
                 replace_ds_pattern = r'(options\s*.*zfs=)({boot_env})(\s*.*$)'.format(
-                    boot_env=f"{self.be_root}/{self.old_boot_environment}")
+                    boot_env=f"{self.be_root}/{old_be_string}")
 
                 new_entry_list = self.__config_replace(
                     new_conf_list, replace_ds_pattern,
-                    r"\1" + f"{self.be_root}/{self.boot_environment}" + r"\3")
+                    r"\g<1>" + f"{self.be_root}/{be_string}" + r"\g<3>")
 
             else:
                 entry_guess_full = '\n'.join(entry_guess_list)
@@ -270,8 +275,9 @@ class SystemdBoot(plugin_config.Plugin):
         replace_loader_pattern = r'(default)(\s*)(zedenv-{boot_env})(.*$)'.format(
             boot_env=self.old_boot_environment)
 
-        conf_list = self.__config_replace(conf_list, replace_loader_pattern,
-                                          r"\1\2" + f"zedenv-{self.boot_environment}" + r"\4")
+        conf_list = self.__config_replace(
+            conf_list, replace_loader_pattern,
+            r"\g<1>\g<2>" + f"zedenv-{self.boot_environment}" + r"\g<4>")
 
         if not self.noop:
             if os.path.isfile(real_loader_conf_path):
