@@ -31,9 +31,11 @@ class FreeBSDLoader(plugin_config.Plugin):
     def post_activate(self):
         canmount_setting = "canmount=noauto" if self.zfs_be else "canmount=on"
 
+        ds = f"{self.be_root}/{self.boot_environment}"
+
         try:
             pyzfscmds.cmd.zfs_set(f"{self.be_root}/{self.boot_environment}", canmount_setting)
-        except RuntimeError:
+        except RuntimeError as e:
             ZELogger.log({
                 "level": "EXCEPTION",
                 "message": f"Failed to set {canmount_setting} for {ds}\n{e}\n"

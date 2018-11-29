@@ -10,6 +10,7 @@ import pyzfscmds.utility as zfs_utility
 from typing import Optional, List, Dict
 
 import zedenv.lib.check
+import zedenv.lib.system
 from zedenv.lib.logger import ZELogger
 
 """
@@ -105,7 +106,8 @@ def snapshot(boot_environment_name,
 
     dataset_name = f"{boot_environment_root}/{boot_environment_name}"
 
-    suffix_time = datetime.datetime.now().strftime(snap_suffix_time_format)
+    with zedenv.lib.system.setlocale():
+        suffix_time = datetime.datetime.now().strftime(snap_suffix_time_format)
     full_snap_suffix = f"{snap_prefix}-{suffix_time}" if snap_prefix else suffix_time
 
     try:

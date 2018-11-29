@@ -16,6 +16,7 @@ import zedenv.lib.configure
 import zedenv.lib.be
 import zedenv.lib.check
 from zedenv.lib.logger import ZELogger
+import zedenv.lib.system
 
 
 def get_promote_snapshots(be_pool: str, destroy_dataset: str) -> list:
@@ -74,13 +75,12 @@ def get_clone_origin(destroy_dataset: str) -> Optional[str]:
 
     origin_datetime = None
     try:
-        origin_datetime = datetime.datetime.strptime(
-            origin_property.split('@')[1], "%Y-%m-%d-%H-%f")
+        origin_datetime = zedenv.lib.system.parse_time(origin_property)
     except ValueError:
         try:
-            origin_datetime = datetime.datetime.strptime(
-                origin_property.split('@')[1].split("-", 1)[1], "%Y-%m-%d-%H-%f")
-        except ValueError as e:
+            origin_datetime = zedenv.lib.system.parse_time(
+                origin_property.split('@')[1])
+        except ValueError:
             ZELogger.log({
                 "level": "EXCEPTION",
                 "message": f"Failed to parse time from origin {origin_property}\n"
@@ -90,8 +90,9 @@ def get_clone_origin(destroy_dataset: str) -> Optional[str]:
     try:
         creation_property = pyzfscmds.cmd.zfs_get(destroy_dataset,
                                                   columns=['value'],
-                                                  properties=['creation'])
-    except RuntimeError:
+                                                  properties=['creation'],
+                                                  env_variables_override={"LC_ALL": "C"})
+    except RuntimeError as e:
         ZELogger.log({
             "level": "EXCEPTION",
             "message": f"Failed to get creation of {creation_property}\n{e}\n"
@@ -101,9 +102,9 @@ def get_clone_origin(destroy_dataset: str) -> Optional[str]:
 
     creation_datetime = None
     try:
-        creation_datetime = datetime.datetime.strptime(creation_property,
-                                                       "%a %b %d %H:%M %Y")
-    except ValueError:
+        creation_datetime = zedenv.lib.system.parse_time(creation_property,
+                                                         fmt="%a %b %d %H:%M %Y")
+    except ValueError as e:
         ZELogger.log({
             "level": "EXCEPTION",
             "message": f"Failed to parse time from origin {origin_property}\n{e}"
