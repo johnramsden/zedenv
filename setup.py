@@ -12,7 +12,8 @@ tests_require = [
 ]
 
 dev_require = [
-    'Sphinx'
+    'Sphinx',
+    'docutils-stubs' # Type hints
 ]
 
 dependency_links = [
@@ -42,7 +43,7 @@ setup(
     ],
     keywords='cli',
     packages=find_packages(exclude=["*tests*", "test_*"]),
-    install_requires=['click', 'pyzfscmds'],
+    install_requires=['click', 'pyzfscmds >= 0.1.4'],
     setup_requires=['pytest-runner'],
     dependency_links=dependency_links,
     tests_require=tests_require,
