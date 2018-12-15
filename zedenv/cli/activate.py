@@ -350,12 +350,12 @@ def cli(boot_environment: str,
         ZELogger.log({"level": "EXCEPTION", "message": err}, exit_on_error=True)
 
     try:
-        with zedenv.lib.check.Pidfile() as pf:
+        with zedenv.lib.check.Pidfile():
 
             boot_environment_root = zedenv.lib.be.root()
 
             bootloader_set = zedenv.lib.be.get_property(
-                f"{boot_environment_root}/{boot_environment}", "org.zedenv:bootloader")
+                boot_environment_root, "org.zedenv:bootloader")
             if not bootloader and bootloader_set:
                 bootloader = bootloader_set if bootloader_set != '-' else None
 

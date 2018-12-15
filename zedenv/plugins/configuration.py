@@ -223,8 +223,7 @@ class Plugin(object):
                             "'/etc/fstab' can be found at '/etc/fstab.bak'.\n")
             })
 
-    def post_activate(self):
-        pass
+    # activate
 
     def pre_activate(self):
         pass
@@ -232,5 +231,20 @@ class Plugin(object):
     def mid_activate(self, be_mountpoint: str):
         pass
 
+    def post_activate(self):
+        pass
+
+    # destroy
+
     def post_destroy(self, target):
+        pass
+
+    # create
+
+    def post_create(self):
+        pass
+
+    # rename
+
+    def post_rename(self):
         pass

@@ -1,5 +1,5 @@
 """List boot environments cli"""
-
+import errno
 import re
 import sys
 import datetime
@@ -356,10 +356,32 @@ def cli(boot_environment: str,
     except RuntimeError as err:
         ZELogger.log({"level": "EXCEPTION", "message": err}, exit_on_error=True)
 
-    zedenv_destroy(boot_environment,
-                   zedenv.lib.be.root(),
-                   pyzfscmds.system.agnostic.mountpoint_dataset("/"),
-                   bootloader,
-                   verbose,
-                   noconfirm,
-                   noop)
+    try:
+        with zedenv.lib.check.Pidfile():
+
+            boot_environment_root = zedenv.lib.be.root()
+
+            bootloader_set = zedenv.lib.be.get_property(
+                boot_environment_root, "org.zedenv:bootloader")
+            if not bootloader and bootloader_set:
+                bootloader = bootloader_set if bootloader_set != '-' else None
+
+            zedenv_destroy(boot_environment,
+                           boot_environment_root,
+                           pyzfscmds.system.agnostic.mountpoint_dataset("/"),
+                           bootloader,
+                           verbose,
+                           noconfirm,
+                           noop)
+
+    except IOError as e:
+        if e[0] == errno.EPERM:
+            ZELogger.log({
+                "level": "EXCEPTION", "message":
+                    "You need root permissions to destroy"
+            }, exit_on_error=True)
+    except zedenv.lib.check.ProcessRunningException as pr:
+        ZELogger.log({
+            "level": "EXCEPTION", "message":
+                f"Already running zedenv.\n {pr}"
+        }, exit_on_error=True)

@@ -10,14 +10,12 @@ import zedenv.lib.be
 from zedenv.lib.logger import ZELogger
 
 import os
-import sys
-import errno
 
 
 def startup_check():
     try:
         pyzfscmds.check.is_root_on_zfs()
-    except RuntimeError as err:
+    except RuntimeError:
         raise RuntimeError(
             f"System is not booting off a ZFS root dataset.\n")
 
@@ -50,6 +48,7 @@ class Pidfile:
                         f'process already running in {self.pidfile} as {pid}')
                 else:
                     os.remove(self.pidfile)
+                    self.pidfd = f
 
             if pid:
                 ProcessRunningException(
@@ -58,7 +57,7 @@ class Pidfile:
         try:
             with open(self.pidfile, 'w+') as f:
                 f.write(str(os.getpid()))
-        except OSError as e:
+        except OSError:
             ZELogger.log({
                 "level": "EXCEPTION", "message": f"Cannot write to pidfile {self.pidfile}"
             }, exit_on_error=True)

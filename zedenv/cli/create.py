@@ -1,5 +1,5 @@
 """List boot environments cli"""
-
+import errno
 import sys
 
 from typing import Optional
@@ -11,6 +11,7 @@ import pyzfscmds.utility as zfs_utility
 
 import zedenv.lib.be
 import zedenv.lib.check
+import zedenv.lib.configure
 from zedenv.lib.logger import ZELogger
 
 
@@ -84,7 +85,8 @@ def zedenv_create(parent_dataset: str,
                   root_dataset: str,
                   boot_environment: str,
                   verbose: bool,
-                  existing: Optional[str]):
+                  existing: Optional[str],
+                  bootloader: Optional[str]):
     """
     :Parameters:
       parent_dataset : str
@@ -106,6 +108,28 @@ def zedenv_create(parent_dataset: str,
 
     # Remove the final part of the data set after the last / and add new name
     boot_environment_dataset = f"{parent_dataset}/{boot_environment}"
+
+    zpool = zedenv.lib.be.dataset_pool(boot_environment_dataset)
+    current_be = None
+    try:
+        current_be = pyzfscmds.utility.dataset_child_name(
+            zedenv.lib.be.bootfs_for_pool(zpool))
+    except RuntimeError:
+        ZELogger.log({
+            "level": "EXCEPTION",
+            "message": f"Failed to get active boot environment'\n"
+        }, exit_on_error=True)
+
+    bootloader_plugin = None
+    if bootloader:
+        bootloader_plugin = zedenv.lib.configure.get_bootloader(
+            boot_environment, current_be, bootloader, verbose, False, False,
+            parent_dataset
+        )
+        ZELogger.verbose_log({
+            "level": "INFO",
+            "message": f"Using plugin {bootloader}\n"
+        }, verbose)
 
     if zfs_utility.dataset_exists(boot_environment_dataset):
         ZELogger.log({
@@ -135,23 +159,68 @@ def zedenv_create(parent_dataset: str,
                             f" from {clone_sources['snapshot']}")
             }, exit_on_error=True)
 
+    if bootloader_plugin:
+        try:
+            bootloader_plugin.post_create()
+        except RuntimeWarning as err:
+            ZELogger.verbose_log({
+                "level": "WARNING",
+                "message": f"During {bootloader_plugin.bootloader} post create the following"
+                           f" occurred:\n\n{err}\nContinuing creation.\n"
+            }, verbose)
+        except RuntimeError as err:
+            ZELogger.log({
+                "level": "EXCEPTION",
+                "message": f"During {bootloader_plugin.bootloader} post create the following "
+                           f"occurred:\n\n{err}\nStopping creation.\n"
+            }, exit_on_error=True)
+        except AttributeError:
+            ZELogger.verbose_log({
+                "level": "INFO",
+                "message": f"Tried to run {bootloader_plugin.bootloader} 'post create', "
+                           f"not implemented.\n"
+            }, verbose)
+
 
 @click.command(name="create",
                help="Create a boot environment.")
 @click.option('--verbose', '-v',
               is_flag=True,
               help="Print verbose output.")
+@click.option('--bootloader', '-b',
+              help="Use bootloader type.")
 @click.option('--existing', '-e',
               help="Use existing boot environment as source.")
 @click.argument('boot_environment')
-def cli(boot_environment: str, verbose: Optional[bool], existing: Optional[str]):
+def cli(boot_environment: str, verbose: Optional[bool],
+        existing: Optional[str], bootloader: Optional[str]):
     try:
         zedenv.lib.check.startup_check()
     except RuntimeError as err:
         ZELogger.log({"level": "EXCEPTION", "message": err}, exit_on_error=True)
 
-    parent_dataset = zedenv.lib.be.root()
-    root_dataset = pyzfscmds.system.agnostic.mountpoint_dataset("/")
+    try:
+        with zedenv.lib.check.Pidfile():
 
-    zedenv_create(parent_dataset, root_dataset,
-                  boot_environment, verbose, existing)
+            boot_environment_root = zedenv.lib.be.root()
+            root_dataset = pyzfscmds.system.agnostic.mountpoint_dataset("/")
+
+            bootloader_set = zedenv.lib.be.get_property(
+                boot_environment_root, "org.zedenv:bootloader")
+            if not bootloader and bootloader_set:
+                bootloader = bootloader_set if bootloader_set != '-' else None
+
+            zedenv_create(boot_environment_root, root_dataset,
+                          boot_environment, verbose, existing, bootloader)
+
+    except IOError as e:
+        if e[0] == errno.EPERM:
+            ZELogger.log({
+                "level": "EXCEPTION", "message":
+                    "You need root permissions to create"
+            }, exit_on_error=True)
+    except zedenv.lib.check.ProcessRunningException as pr:
+        ZELogger.log({
+            "level": "EXCEPTION", "message":
+                f"Already running zedenv.\n {pr}"
+        }, exit_on_error=True)

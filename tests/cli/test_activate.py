@@ -29,7 +29,7 @@ def create_new_boot_environment(root_dataset):
     existing = None
 
     zedenv.cli.create.zedenv_create(parent_dataset, root_dataset,
-                                    boot_environment, verbose, existing)
+                                    boot_environment, verbose, existing, None)
 
     return f"{parent_dataset}/{boot_environment}"
 

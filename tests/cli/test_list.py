@@ -25,7 +25,7 @@ def test_boot_environment_listed(root_dataset, capsys):
     columns = ["name", "origin", "creation"]
 
     zedenv.cli.create.zedenv_create(parent_dataset, root_dataset,
-                                    boot_environment, verbose, existing)
+                                    boot_environment, verbose, existing, None)
 
     be_list = zedenv.cli.list.configure_boot_environment_list(
         zfs_utility.dataset_parent(root_dataset), columns, True)

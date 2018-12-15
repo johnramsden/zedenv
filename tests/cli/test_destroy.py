@@ -23,7 +23,7 @@ def created_boot_environment(root_dataset):
     verbose = True
     existing = None
     zedenv.cli.create.zedenv_create(parent_dataset, root_dataset,
-                                    boot_environment, verbose, existing)
+                                    boot_environment, verbose, existing, None)
 
     return boot_environment
 
