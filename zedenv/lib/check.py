@@ -35,10 +35,10 @@ class Pidfile:
 
     def __init__(self, name="zedenv.pid", directory="/var/run"):
         self.pidfile = os.path.join(directory, name)
+        self.pidfd = None
 
     def __enter__(self):
         if os.path.exists(self.pidfile):
-
             pid = None
             with open(self.pidfile) as f:
                 pid = self._check()
