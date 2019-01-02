@@ -1,9 +1,10 @@
 sudo: required
-dist: trusty
+dist: xenial
 
 language: python
 python:
   - "3.6"
+  - "3.7"
 
 env:
   global:
@@ -14,7 +15,7 @@ cache:
   custom_install: true
 
 before_install:
-  - sudo scripts/travis/ubuntu-14_04/setup_zfs_requirements.sh
+  - sudo scripts/travis/ubuntu/setup_zfs_requirements.sh
   - sudo scripts/travis/common/create_test_root.sh
 
 branches:
