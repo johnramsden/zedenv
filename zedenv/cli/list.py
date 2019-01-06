@@ -121,8 +121,9 @@ def zedenv_list(verbose: Optional[bool],
 
     columns = ["name"]
 
-    if spaceused:
-        columns.extend(["used", "usedds", "usedbysnapshots", "usedrefreserv", "refer"])
+    # TODO: Complete
+    # if spaceused:
+    #     columns.extend(["used", "usedds", "usedbysnapshots", "usedrefreserv", "refer"])
 
     """
     TODO:
