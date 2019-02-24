@@ -4,6 +4,7 @@ Common functions
 
 import logging.config
 import logging.handlers
+import sys
 
 
 class ZELogger:
@@ -13,17 +14,27 @@ class ZELogger:
             'console': {
                 'class': 'logging.Formatter',
                 'format': '%(message)s',
+            },
+            'error': {
+                'class': 'logging.Formatter',
+                'format': '%(message)s',
             }
         },
         'handlers': {
             'console': {
                 'class': 'logging.StreamHandler',
-                'level': logging.DEBUG,
+                'level': logging.INFO,
                 'formatter': 'console',
+                'stream': sys.stdout,
+            },
+            'error': {
+                'class': 'logging.StreamHandler',
+                'level': logging.DEBUG,
+                'formatter': 'error',
             },
         },
         'root': {
-            'level': logging.DEBUG,
+            'level': logging.INFO,
             'handlers': ['console']
         },
     }
