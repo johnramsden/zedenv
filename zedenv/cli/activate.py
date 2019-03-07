@@ -357,11 +357,21 @@ def cli(boot_environment: str,
             bootloader_set = zedenv.lib.be.get_property(
                 boot_environment_root, "org.zedenv:bootloader")
             if not bootloader and bootloader_set:
-                bootloader = bootloader_set if bootloader_set != '-' else None
+                if bootloader_set != '-':
+                    bootloader = bootloader_set
 
-            if noconfirm and not bootloader:
-                sys.exit(
-                    "The '--noconfirm/-y' flag requires the bootloader option '--bootloader/-b'.")
+            if not bootloader:
+                ZELogger.log({
+                    "level": "WARNING",
+                    "message": ("WARNING: Running activate without a bootloader. "
+                                "Re-run with a default bootloader, or with the "
+                                "'--bootloader/-b' flag. If you plan to manually edit your "
+                                "bootloader config this message can safely be ignored.\n")
+                })
+
+                if noconfirm:
+                    sys.exit("The '--noconfirm/-y' flag requires the bootloader option "
+                             "'--bootloader/-b'.")
 
             zedenv_activate(boot_environment,
                             boot_environment_root,
