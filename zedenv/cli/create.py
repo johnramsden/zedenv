@@ -59,7 +59,7 @@ def get_clones(root_dataset: str,
             else:
                 child = zfs_utility.dataset_child_name(c)
             clone_props = zedenv.lib.be.properties(
-                c, [["canmount", "off"]])
+                c, [["canmount", "noauto"]])
             clone_data.append({
                 "snapshot": f"{c}@{snap_suffix}",
                 "properties": clone_props,
