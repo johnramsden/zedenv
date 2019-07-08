@@ -24,7 +24,7 @@ def format_boot_environment(be_list_line: list,
 
 def configure_boot_environment_list(be_root: str,
                                     columns: list,
-                                    scripting: Optional[bool]) -> list:
+                                    scripting = False, only_active = False) -> list:
     """
     Converts a list of boot environments with their properties to be printed
     to a list of column separated strings.
@@ -41,42 +41,43 @@ def configure_boot_environment_list(be_root: str,
 
     for env in boot_environments:
         if not zfs_utility.is_snapshot(env['name']):
-            # Add name column
-            boot_environment_entry = [zfs_utility.dataset_child_name(env['name'])]
+            if not only_active or pyzfscmds.system.agnostic.mountpoint_dataset("/") == env['name']:
+                # Add name column
+                boot_environment_entry = [zfs_utility.dataset_child_name(env['name'])]
 
-            # Add active column
-            active = ""
-            if pyzfscmds.system.agnostic.mountpoint_dataset("/") == env['name']:
-                active = "N"
-            if zedenv.lib.be.bootfs_for_pool(
-                    zedenv.lib.be.dataset_pool(env['name'])) == env['name']:
-                active += "R"
-            boot_environment_entry.append(active)
+                # Add active column
+                active = ""
+                if pyzfscmds.system.agnostic.mountpoint_dataset("/") == env['name']:
+                    active = "N"
+                if zedenv.lib.be.bootfs_for_pool(
+                        zedenv.lib.be.dataset_pool(env['name'])) == env['name']:
+                    active += "R"
+                boot_environment_entry.append(active)
 
-            # Add mountpoint
-            dataset_mountpoint = pyzfscmds.system.agnostic.dataset_mountpoint(env['name'])
-            if dataset_mountpoint:
-                boot_environment_entry.append(dataset_mountpoint)
-            else:
-                boot_environment_entry.append("-")
-
-            # Add origin column
-            if 'origin' in env:
-                origin_list = env['origin'].split("@")
-                origin_ds_child = origin_list[0].rsplit('/', 1)[-1]
-
-                if zfs_utility.is_snapshot(env['origin']):
-                    origin = f'{origin_ds_child}@{origin_list[1]}'
+                # Add mountpoint
+                dataset_mountpoint = pyzfscmds.system.agnostic.dataset_mountpoint(env['name'])
+                if dataset_mountpoint:
+                    boot_environment_entry.append(dataset_mountpoint)
                 else:
-                    origin = env['origin']
+                    boot_environment_entry.append("-")
 
-                boot_environment_entry.append(origin)
-
-            # Add creation
-            if 'creation' in env:
-                boot_environment_entry.append(env['creation'])
-
-            unformatted_boot_environments.append(boot_environment_entry)
+                # Add origin column
+                if 'origin' in env:
+                    origin_list = env['origin'].split("@")
+                    origin_ds_child = origin_list[0].rsplit('/', 1)[-1]
+    
+                    if zfs_utility.is_snapshot(env['origin']):
+                        origin = f'{origin_ds_child}@{origin_list[1]}'
+                    else:
+                        origin = env['origin']
+    
+                    boot_environment_entry.append(origin)
+    
+                # Add creation
+                if 'creation' in env:
+                    boot_environment_entry.append(env['creation'])
+    
+                unformatted_boot_environments.append(boot_environment_entry)
 
     columns.insert(1, 'active')
     columns.insert(2, 'mountpoint')
@@ -111,6 +112,7 @@ def zedenv_list(verbose: Optional[bool],
                 scripting: Optional[bool],
                 # snapshots: Optional[bool],
                 origin: Optional[bool],
+                active: Optional[bool],
                 be_root: str):
     """
     Main list command. Separate for testing.
@@ -137,7 +139,7 @@ def zedenv_list(verbose: Optional[bool],
 
     columns.append("creation")
 
-    boot_environments = configure_boot_environment_list(be_root, columns, scripting)
+    boot_environments = configure_boot_environment_list(be_root, columns, scripting = scripting, only_active = active)
 
     for list_output in boot_environments:
         ZELogger.log({"level": "INFO", "message": list_output})
@@ -163,12 +165,16 @@ def zedenv_list(verbose: Optional[bool],
 @click.option('--origin', '-O',
               is_flag=True,
               help="Display origin.")
+@click.option('--active', '-a',
+              is_flag=True,
+              help="Print name of active boot environment.")
 def cli(verbose: Optional[bool],
         # alldatasets: Optional[bool],
         spaceused: Optional[bool],
         scripting: Optional[bool],
         # snapshots: Optional[bool],
-        origin: Optional[bool]):
+        origin: Optional[bool],
+        active: Optional[bool]):
     try:
         zedenv.lib.check.startup_check()
     except RuntimeError as err:
@@ -180,4 +186,5 @@ def cli(verbose: Optional[bool],
                 scripting,
                 # snapshots,
                 origin,
+                active,
                 zedenv.lib.be.root())

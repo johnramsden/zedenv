@@ -172,6 +172,92 @@ def destroy_origin_snapshots(destroy_dataset, be_pool, origin_snaps, noop, verbo
                 ZELogger.verbose_log(
                     {"level": "INFO", "message": f"Destroyed {snap}.\n"}, verbose)
 
+def destroy_element(target: str,
+                    dataset: str,
+                    is_snapshot: bool,
+                    verbose: Optional[bool],
+                    noconfirm: Optional[bool],
+                    noop: Optional[bool]):
+    if is_snapshot:
+        if not noop:
+            try:
+                pyzfscmds.cmd.zfs_destroy_snapshot(dataset)
+            except RuntimeError as e:
+                ZELogger.log({
+                    "level": "EXCEPTION",
+                    "message": f"Snapshot may be origin for other boot environment.\n{e}"
+                }, exit_on_error=True)
+        ZELogger.verbose_log(
+            {"level": "INFO", "message": f"Destroyed '{dataset}"}, verbose)
+    else:
+        destroy_origin_snapshot = True
+        origin_snaps = None
+        if pyzfscmds.utility.is_clone(dataset):
+            ZELogger.verbose_log({
+                "level": "INFO",
+                "message": (f"Boot environment '{target}' is a clone.\n"
+                            "Checking to make sure there are no dependant clones to promote.\n")
+            }, verbose)
+
+            # Get and promote snapshots
+            pool = zedenv.lib.be.dataset_pool(dataset)
+            promote_snaps = get_promote_snapshots(pool, dataset)
+
+            for ds in promote_snaps:
+                if not noop:
+                    try:
+                        pyzfscmds.cmd.zfs_promote(ds)
+                    except RuntimeError as e:
+                        ZELogger.log({
+                            "level": "EXCEPTION",
+                            "message": f"Failed to promote {ds}\n{e}\n"
+                        }, exit_on_error=True)
+                    else:
+                        ZELogger.verbose_log(
+                            {"level": "INFO", "message": f"Promoted {ds}.\n"}, verbose)
+
+            """
+            Find destroyable:
+            There's probably a better way to match snapshots that can be destroyed,
+            for now this will do
+            """
+            origin_snaps = get_origin_snapshots(dataset)
+            clone_origin = get_clone_origin(dataset)
+            if clone_origin:
+                if not noconfirm:
+                    click.echo(f"The origin snapshot '{clone_origin.split('@')[1]}' "
+                               f"for the boot environment '{target}' "
+                               f"still exists, do you want to destroy it? "
+                               f"This action will be permanent.\n")
+                    destroy_origin_snapshot = click.confirm(f"Destroy '{clone_origin}'?")
+                    click.echo()
+
+                if not destroy_origin_snapshot:
+                    click.echo(
+                        f"The origin snapshot '{clone_origin.split('@')[1]}' will be kept.")
+
+        # Destroy the boot environment
+        if not noop:
+            try:
+                pyzfscmds.cmd.zfs_destroy(dataset,
+                                          recursive_children=True)
+            except RuntimeError:
+                ZELogger.log({
+                    "level": "EXCEPTION",
+                    "message": f"Failed to destroy {dataset}\n"
+                }, exit_on_error=True)
+
+        try:
+            # TODO: Why is this necessary?
+            is_still_clone = pyzfscmds.utility.is_clone(dataset)
+        except RuntimeError:
+            is_still_clone = False
+
+        if is_still_clone:
+            promote_origins(dataset, pool, origin_snaps, noop, verbose)
+
+        if destroy_origin_snapshot:
+            destroy_origin_snapshots(dataset, pool, origin_snaps, noop, verbose)
 
 def zedenv_destroy(target: str,
                    be_root: str,
@@ -237,84 +323,27 @@ def zedenv_destroy(target: str,
             "message": f"Using plugin {bootloader}\n"
         }, verbose)
 
-    if ds_is_snapshot:
-        if not noop:
-            try:
-                pyzfscmds.cmd.zfs_destroy_snapshot(destroy_dataset)
-            except RuntimeError as e:
-                ZELogger.log({
-                    "level": "EXCEPTION",
-                    "message": f"Snapshot may be origin for other boot environment.\n{e}"
-                }, exit_on_error=True)
-        ZELogger.verbose_log(
-            {"level": "INFO", "message": f"Destroyed '{destroy_dataset}"}, verbose)
-    else:
-        destroy_origin_snapshot = True
-        origin_snaps = None
-        if pyzfscmds.utility.is_clone(destroy_dataset):
-            ZELogger.verbose_log({
-                "level": "INFO",
-                "message": (f"Boot environment '{target}' is a clone.\n"
-                            "Checking to make sure there are no dependant clones to promote.\n")
-            }, verbose)
-
-            # Get and promote snapshots
-            promote_snaps = get_promote_snapshots(be_pool, destroy_dataset)
-
-            for ds in promote_snaps:
-                if not noop:
-                    try:
-                        pyzfscmds.cmd.zfs_promote(ds)
-                    except RuntimeError as e:
-                        ZELogger.log({
-                            "level": "EXCEPTION",
-                            "message": f"Failed to promote {ds}\n{e}\n"
-                        }, exit_on_error=True)
-                ZELogger.verbose_log(
-                    {"level": "INFO", "message": f"Promoted {ds}.\n"}, verbose)
-
-            """
-            Find destroyable:
-            There's probably a better way to match snapshots that can be destroyed,
-            for now this will do
-            """
-            origin_snaps = get_origin_snapshots(destroy_dataset)
-            clone_origin = get_clone_origin(destroy_dataset)
-            if clone_origin:
-                if not noconfirm:
-                    click.echo(f"The origin snapshot '{clone_origin.split('@')[1]}' "
-                               f"for the boot environment '{target}' "
-                               f"still exists, do you want to destroy it? "
-                               f"This action will be permanent.\n")
-                    destroy_origin_snapshot = click.confirm(f"Destroy '{clone_origin}'?")
-                    click.echo()
-
-                if not destroy_origin_snapshot:
-                    click.echo(
-                        f"The origin snapshot '{clone_origin.split('@')[1]}' will be kept.")
-
-        # Destroy the boot environment
-        if not noop:
-            try:
-                pyzfscmds.cmd.zfs_destroy(destroy_dataset,
-                                          recursive_children=True)
-            except RuntimeError:
-                ZELogger.log({
-                    "level": "EXCEPTION",
-                    "message": f"Failed to destroy {destroy_dataset}\n"
-                }, exit_on_error=True)
-
-        try:
-            # TODO: Why is this necessary?
-            is_still_clone = pyzfscmds.utility.is_clone(destroy_dataset)
-        except RuntimeError:
-            is_still_clone = False
-
-        if is_still_clone:
-            promote_origins(destroy_dataset, be_pool, origin_snaps, noop, verbose)
-
-        if destroy_origin_snapshot:
-            destroy_origin_snapshots(destroy_dataset, be_pool, origin_snaps, noop, verbose)
+    grub_boot = zedenv.lib.be.get_property(destroy_dataset, 'org.zedenv.grub:boot')
+    if not grub_boot or grub_boot == "-":
+        grub_boot = "/mnt/boot"
+    
+    # Destroy the root boot environment
+    destroy_element(target, destroy_dataset, ds_is_snapshot, verbose, noconfirm, noop)
+    
+    # Destroy the dataset for the kernel and ramdisk files if a separate ZFS boot pool is used
+    if zedenv.lib.be.extra_bpool():
+        boot_dataset = pyzfscmds.system.agnostic.mountpoint_dataset("/boot")
+        m = re.search(r"(.*)/zedenv-", boot_dataset)
+        if m:
+            boot_clone = f"{m.group(1)}/zedenv-{target}"
+            destroy_dataset = f"{m.group(1)}/zedenv-{target}"
+            ds_is_snapshot = pyzfscmds.utility.is_snapshot(destroy_dataset)
+            destroy_element(target, destroy_dataset, ds_is_snapshot, verbose, noconfirm, noop)
+        else:
+            ZELogger.log({
+                    "level": "WARNING",
+                    "message": (f"Failed to determine a valid path from '{boot_dataset}'")
+            })
 
     if bootloader:
         try:

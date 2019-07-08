@@ -68,6 +68,7 @@ def zfs_manual_mount(dataset: str, mountpoint: str, call_args: Optional[list] = 
     system_platform = platform.system().lower()
 
     mount_call = ["-t", "zfs"]
+    mount_call_fallback = ["-t", "zfs"]
     if system_platform == "linux":
         """
         Temp mount on linux requires '-o zfsutil', see:
@@ -77,10 +78,19 @@ def zfs_manual_mount(dataset: str, mountpoint: str, call_args: Optional[list] = 
 
     if call_args:
         mount_call.extend(call_args)
+        mount_call_fallback.extend(call_args)
 
     mount_call.extend([dataset, mountpoint])
+    mount_call_fallback.extend([dataset, mountpoint])
 
     try:
         mount(call_args=mount_call)
-    except RuntimeError as e:
-        raise
+    except RuntimeError:
+        if len(mount_call) != len(mount_call_fallback):
+            try:
+                # Using `-o zfsutil` fails if we want to mount a dataset that is already mounted
+                mount(call_args=mount_call_fallback)
+            except RuntimeError:
+                raise
+        else:
+            raise

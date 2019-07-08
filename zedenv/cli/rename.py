@@ -22,7 +22,7 @@ def zedenv_rename(be_root: str,
     old_be_dataset = f"{be_root}/{boot_environment}"
     new_be_dataset = f"{be_root}/{new_boot_environment}"
 
-    zpool = zedenv.lib.be.dataset_pool(new_be_dataset)
+    zpool = zedenv.lib.be.dataset_pool(old_be_dataset)
     current_be = None
     try:
         current_be = pyzfscmds.utility.dataset_child_name(
@@ -75,6 +75,21 @@ def zedenv_rename(be_root: str,
         pyzfscmds.cmd.zfs_rename(old_be_dataset, new_be_dataset)
     except RuntimeError as err:
         ZELogger.log({"level": "EXCEPTION", "message": err}, exit_on_error=True)
+
+    # Rename the boot dataset if a separate ZFS boot pool is used
+    if zedenv.lib.be.extra_bpool():
+        boot_dataset = pyzfscmds.system.agnostic.mountpoint_dataset('/boot')
+        be_boot = zedenv.lib.be.root('/boot')
+        old_be_boot_dataset = f"{be_boot}/zedenv-{boot_environment}"
+        new_be_boot_dataset = f"{be_boot}/zedenv-{new_boot_environment}"
+        try:
+            pyzfscmds.cmd.zfs_rename(old_be_boot_dataset, new_be_boot_dataset)
+        except RuntimeError as e:
+            ZELogger.log({
+                "level": "EXCEPTION",
+                "message": f"Failed to rename the boot dataset '{old_be_boot_dataset}' to '{new_be_boot_dataset}'."
+                           f"The following error occured:\n\n{err}\nSopping rename.\n"
+            }, exit_on_error=True)
 
     if bootloader_plugin:
         try:
