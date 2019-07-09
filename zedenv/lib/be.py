@@ -7,7 +7,6 @@ import pyzfscmds.check
 import pyzfscmds.cmd
 import pyzfscmds.system.agnostic
 import pyzfscmds.utility as zfs_utility
-import re
 from typing import Optional, List, Dict
 
 import zedenv.lib.check
@@ -85,31 +84,29 @@ def properties(dataset, appended_properties: Optional[list]) -> list:
     # Make sure that the mountpoint is correct even if we are in a chroot environment.
     # In this case, the ZFS pool is mounted with an alternative root (e.g. to `/mnt`).
     rpool = zedenv.lib.be.dataset_pool(dataset)
-    pool_properties = None
     altroot = None
     try:
-        pool_properties = pyzfscmds.cmd.zpool_get(rpool,
-                                                    columns=["property", "value"],
-                                                    properties=["altroot"])
+        altroot = pyzfscmds.cmd.zpool_get(
+            rpool, columns=["value"], properties=["altroot"])
     except RuntimeError:
         ZELogger.log({
             "level": "EXCEPTION",
             "message": f"Failed to get properties of '{dataset}'"
         }, exit_on_error=True)
-    else:
-        m = re.match(r"altroot\t(.*)", pool_properties)
-        if m and m.group(1) != '-':
-            altroot = m.group(1)
-    
-    # Search and remove the alternative root at the beginning of the mountpoint
-    for i,prop in enumerate(used_props):
-        m = re.match(r"mountpoint=(.*)", prop)
-        if m and altroot and (len(m.group(1)) >= len(altroot)) and (m.group(1)[:len(altroot)] == altroot):
-            if len(m.group(1)) == len(altroot):
-                used_props[i] = "mountpoint=/"
-            else:
-                used_props[i] = "mountpoint=/" + m.group(1)[len(altroot):]
 
+    if altroot != '-':
+        # Search and remove the alternative root at the beginning of the mountpoint
+        for i, p in enumerate(used_props):
+            prop, val = p.split("=")
+            if prop != "mountpoint":
+                continue
+
+            alt_len, mp_len = len(altroot), len(val)
+            if (mp_len >= alt_len) and (val[:alt_len] == altroot):
+                mountpoint = "mountpoint=/"
+                if mp_len != alt_len:
+                    mountpoint = mountpoint + val[alt_len:]
+                used_props[i] = mountpoint
 
     return used_props
 
@@ -165,7 +162,8 @@ def root(mount_dataset: str = "/") -> Optional[str]:
 
 
 def extra_bpool() -> bool:
-    return zedenv.lib.be.root('/boot') is not None and (zedenv.lib.be.root('/boot') != zedenv.lib.be.root())
+    be_root = zedenv.lib.be.root('/boot')
+    return be_root is not None and (be_root != zedenv.lib.be.root())
 
 
 def mount_pool(mount_dataset: str = "/") -> Optional[str]:
