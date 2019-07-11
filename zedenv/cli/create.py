@@ -23,7 +23,7 @@ def get_clones(root_dataset: str,
 
     clone_data = []
     list_dataset = None  # Dataset we are listing clones under
-
+    snap_suffix = None
     if existing:
         existing_dataset = f"{parent_dataset}/{existing}"
         if zfs_utility.is_snapshot(existing_dataset):
@@ -53,7 +53,6 @@ def get_clones(root_dataset: str,
         }, exit_on_error=True)
 
     for c in [line for line in clones.splitlines()]:
-
         if zfs_utility.dataset_exists(f"{c}@{snap_suffix}", zfs_type="snapshot"):
             if c == list_dataset:
                 child = ""
@@ -153,11 +152,11 @@ def zedenv_create(parent_dataset: str,
 
         try:
             pyzfscmds.cmd.zfs_clone(source['snapshot'], be_clone, properties=source['properties'])
-        except RuntimeError as e:
+        except RuntimeError:
             ZELogger.log({
                 "level": "EXCEPTION",
                 "message": (f"Failed to create {boot_environment_dataset}",
-                            f" from {clone_sources['snapshot']}")
+                            f" from {source['snapshot']}")
             }, exit_on_error=True)
 
     # Clone the dataset for the kernel and ramdisk files if a separate ZFS boot pool is used
@@ -173,19 +172,19 @@ def zedenv_create(parent_dataset: str,
             m = re.search(r"(.*)/zedenv-", boot_dataset)
             if m:
                 boot_clone = f"{m.group(1)}/zedenv-{boot_environment}"
-
                 try:
-                    pyzfscmds.cmd.zfs_clone(source['snapshot'], boot_clone, properties=source['properties'])
-                except RuntimeError as e:
+                    pyzfscmds.cmd.zfs_clone(
+                        source['snapshot'], boot_clone, properties=source['properties'])
+                except RuntimeError:
                     ZELogger.log({
                         "level": "EXCEPTION",
                         "message": (f"Failed to create {boot_clone}",
-                                    f" from {clone_sources['snapshot']}")
+                                    f" from {source['snapshot']}")
                     }, exit_on_error=True)
             else:
                 ZELogger.log({
                         "level": "EXCEPTION",
-                        "message": (f"Failed to determine a valid path from '{boot_dataset}'")
+                        "message": f"Failed to determine a valid path from '{boot_dataset}'"
                     }, exit_on_error=True)
 
     if bootloader_plugin:
