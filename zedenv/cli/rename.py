@@ -78,7 +78,6 @@ def zedenv_rename(be_root: str,
 
     # Rename the boot dataset if a separate ZFS boot pool is used
     if zedenv.lib.be.extra_bpool():
-        boot_dataset = pyzfscmds.system.agnostic.mountpoint_dataset('/boot')
         be_boot = zedenv.lib.be.root('/boot')
         old_be_boot_dataset = f"{be_boot}/zedenv-{boot_environment}"
         new_be_boot_dataset = f"{be_boot}/zedenv-{new_boot_environment}"
