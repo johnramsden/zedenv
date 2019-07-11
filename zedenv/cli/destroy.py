@@ -322,8 +322,6 @@ def zedenv_destroy(target: str,
             "level": "INFO",
             "message": f"Using plugin {bootloader}\n"
         }, verbose)
-
-    if not grub_boot or grub_boot == "-":
     
     # Destroy the root boot environment
     destroy_element(target, destroy_dataset, ds_is_snapshot, verbose, noconfirm, noop)
