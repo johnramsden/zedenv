@@ -323,7 +323,6 @@ def zedenv_destroy(target: str,
             "message": f"Using plugin {bootloader}\n"
         }, verbose)
 
-    grub_boot = zedenv.lib.be.get_property(destroy_dataset, 'org.zedenv.grub:boot')
     if not grub_boot or grub_boot == "-":
         grub_boot = "/mnt/boot"
     
