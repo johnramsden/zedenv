@@ -87,8 +87,9 @@ def zedenv_rename(be_root: str,
         except RuntimeError as e:
             ZELogger.log({
                 "level": "EXCEPTION",
-                "message": f"Failed to rename the boot dataset '{old_be_boot_dataset}' to '{new_be_boot_dataset}'."
-                           f"The following error occured:\n\n{err}\nSopping rename.\n"
+                "message": (f"Failed to rename the boot dataset '{old_be_boot_dataset}' to"
+                            f" '{new_be_boot_dataset}'. The following error occured:\n\n{e}"
+                            "\nStopping rename.\n")
             }, exit_on_error=True)
 
     if bootloader_plugin:

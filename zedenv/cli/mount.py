@@ -47,7 +47,8 @@ def mount_children(child_datasets: list, mountpoint: str, verbose: bool):
             }, verbose)
 
 
-def zedenv_mount(boot_environment: str, mountpoint: Optional[str], verbose: bool, be_root: str, check_bpool = True):
+def zedenv_mount(boot_environment: str, mountpoint: Optional[str],
+                 verbose: bool, be_root: str, check_bpool: bool = True):
     """
     Create a temporary directory and mount a boot environment.
     If an extra argument is given, mount the boot environment at the given mountpoint.
@@ -107,7 +108,8 @@ def zedenv_mount(boot_environment: str, mountpoint: Optional[str], verbose: bool
         mount_children(child_datasets, mountpoint, verbose)
 
     if check_bpool:
-        # If a separate ZFS boot pool is used, mount the corresponding dataset to `{mountpoint}/boot`
+        # If a separate ZFS boot pool is used
+        # mount the corresponding dataset to `{mountpoint}/boot`
         if zedenv.lib.be.extra_bpool():
             boot_environment_boot = zedenv.lib.be.root('/boot')
             be_boot_requested = f"{boot_environment_boot}/zedenv-{boot_environment}"

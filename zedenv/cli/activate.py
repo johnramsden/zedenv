@@ -1,15 +1,14 @@
 """List boot environments cli"""
 
-import sys
 import errno
+import sys
+import tempfile
+from typing import Optional, List
 
 import click
-
 import pyzfscmds.cmd
 import pyzfscmds.system.agnostic
 import pyzfscmds.utility
-import tempfile
-from typing import Optional, List
 
 import zedenv.lib.be
 import zedenv.lib.check
@@ -307,10 +306,8 @@ def zedenv_activate(boot_environment: str,
         boot_child_datasets = None
         be_boot_requested = f"{boot_environment_boot}/zedenv-{boot_environment}"
         try:
-            boot_child_datasets = pyzfscmds.cmd.zfs_list(boot_environment_boot,
-                                                    recursive=True,
-                                                    columns=["name"],
-                                                    zfs_types=["filesystem"])
+            boot_child_datasets = pyzfscmds.cmd.zfs_list(
+                boot_environment_boot, recursive=True, columns=["name"], zfs_types=["filesystem"])
         except RuntimeError as e:
             ZELogger.log({
                 "level": "EXCEPTION",
@@ -319,12 +316,14 @@ def zedenv_activate(boot_environment: str,
 
         be_boot_child_datasets_list = [line for line in boot_child_datasets.splitlines()]
         if not noop:
-            disable_children_automount(be_boot_child_datasets_list,
-                                    be_boot_requested,
-                                    boot_environment_boot,
-                                    verbose)
+            disable_children_automount(
+                be_boot_child_datasets_list,
+                be_boot_requested,
+                boot_environment_boot,
+                verbose)
 
-            apply_settings_to_child_datasets(be_boot_child_datasets_list, be_boot_requested, verbose)
+            apply_settings_to_child_datasets(
+                be_boot_child_datasets_list, be_boot_requested, verbose)
 
     if bootloader_plugin:
         try:
