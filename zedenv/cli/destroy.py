@@ -172,6 +172,7 @@ def destroy_origin_snapshots(destroy_dataset, be_pool, origin_snaps, noop, verbo
                 ZELogger.verbose_log(
                     {"level": "INFO", "message": f"Destroyed {snap}.\n"}, verbose)
 
+
 def destroy_element(target: str,
                     dataset: str,
                     is_snapshot: bool,
@@ -259,6 +260,7 @@ def destroy_element(target: str,
         if destroy_origin_snapshot:
             destroy_origin_snapshots(dataset, pool, origin_snaps, noop, verbose)
 
+
 def zedenv_destroy(target: str,
                    be_root: str,
                    root_dataset: str,
@@ -322,23 +324,22 @@ def zedenv_destroy(target: str,
             "level": "INFO",
             "message": f"Using plugin {bootloader}\n"
         }, verbose)
-    
+
     # Destroy the root boot environment
     destroy_element(target, destroy_dataset, ds_is_snapshot, verbose, noconfirm, noop)
-    
+
     # Destroy the dataset for the kernel and ramdisk files if a separate ZFS boot pool is used
     if zedenv.lib.be.extra_bpool():
         boot_dataset = pyzfscmds.system.agnostic.mountpoint_dataset("/boot")
         m = re.search(r"(.*)/zedenv-", boot_dataset)
         if m:
-            boot_clone = f"{m.group(1)}/zedenv-{target}"
             destroy_dataset = f"{m.group(1)}/zedenv-{target}"
             ds_is_snapshot = pyzfscmds.utility.is_snapshot(destroy_dataset)
             destroy_element(target, destroy_dataset, ds_is_snapshot, verbose, noconfirm, noop)
         else:
             ZELogger.log({
-                    "level": "WARNING",
-                    "message": (f"Failed to determine a valid path from '{boot_dataset}'")
+                "level": "WARNING",
+                "message": (f"Failed to determine a valid path from '{boot_dataset}'")
             })
 
     if bootloader:

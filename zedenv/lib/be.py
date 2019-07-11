@@ -48,7 +48,7 @@ def bootfs_for_pool(zpool: str) -> str:
                                               scripting=True,
                                               properties=["bootfs"],
                                               columns=["value"])
-    except RuntimeError as err:
+    except RuntimeError:
         raise
 
     bootfs = [i.split()[0] for i in bootfs_list.splitlines() if i.split()[0] != "-"]

@@ -46,7 +46,7 @@ def get_clones(root_dataset: str,
     clones = None
     try:
         clones = pyzfscmds.cmd.zfs_list(list_dataset, recursive=True, columns=["name"])
-    except RuntimeError as e:
+    except RuntimeError:
         ZELogger.log({
             "level": "EXCEPTION",
             "message": f"Failed to list datasets under {root_dataset}."
@@ -183,9 +183,9 @@ def zedenv_create(parent_dataset: str,
                     }, exit_on_error=True)
             else:
                 ZELogger.log({
-                        "level": "EXCEPTION",
-                        "message": f"Failed to determine a valid path from '{boot_dataset}'"
-                    }, exit_on_error=True)
+                    "level": "EXCEPTION",
+                    "message": f"Failed to determine a valid path from '{boot_dataset}'"
+                }, exit_on_error=True)
 
     if bootloader_plugin:
         try:
