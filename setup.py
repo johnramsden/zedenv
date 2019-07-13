@@ -7,7 +7,7 @@ tests_require = [
     'pytest',
     'pytest-runner',
     'pytest-cov',
-    'pytest-pep8',
+    'pytest-pycodestyle',
     'tox'
 ]
 

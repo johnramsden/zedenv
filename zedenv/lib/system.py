@@ -1,14 +1,13 @@
 import datetime
-import subprocess
-import platform
-from contextlib import contextmanager
-import datetime
-from typing import List, Optional
 import locale
+import platform
+import subprocess
+from contextlib import contextmanager
+from typing import List, Optional
 
 
 @contextmanager
-def setlocale(encoding: str="C"):
+def setlocale(encoding: str = "C"):
     """
     See: https://stackoverflow.com/a/24070673
     """
@@ -19,9 +18,8 @@ def setlocale(encoding: str="C"):
         locale.setlocale(locale.LC_ALL, saved)
 
 
-def parse_time(origin_property: str, fmt: str="%Y-%m-%d-%H-%f",
-               encoding: str="C", no_setlocale: bool=False) -> datetime:
-
+def parse_time(origin_property: str, fmt: str = "%Y-%m-%d-%H-%f",
+               encoding: str = "C", no_setlocale: bool = False) -> datetime:
     if no_setlocale:
         return datetime.datetime.strptime(origin_property, fmt)
 
@@ -33,7 +31,6 @@ def parse_time(origin_property: str, fmt: str="%Y-%m-%d-%H-%f",
 
 def mount(call_args: List[str] = None,
           mount_command: str = "mount"):
-
     mount_call = [mount_command]
     if call_args:
         mount_call.extend(call_args)

@@ -18,10 +18,10 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
 
-import os
-import sys
-sys.path.insert(0, os.path.abspath('../'))
-from zedenv import __version__
+import os                                   # noqa
+import sys                                  # noqa
+sys.path.insert(0, os.path.abspath('../'))  # noqa
+from zedenv import __version__              # noqa
 
 # -- General configuration ------------------------------------------------
 
@@ -48,7 +48,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'zedenv'
-copyright = '2018, John Ramsden'
+copyright = '2018, John Ramsden'  # noqa
 author = 'John Ramsden'
 
 # The version info for the project you're documenting, acts as replacement for
