@@ -95,7 +95,7 @@ class SystemdBoot(plugin_config.Plugin):
         ]
 
         config_matches = [en.split(".conf")[0] for en in config_entries
-                          if en.split(".conf")[0] == (self.old_entry or self.new_entry)]
+                          if en.split(".conf")[0] in (self.old_entry, self.new_entry)]
 
         old_conf = True if self.old_entry in config_matches else False
         new_conf = True if self.new_entry in config_matches else False
