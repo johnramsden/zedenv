@@ -48,7 +48,7 @@ def bootfs_for_pool(zpool: str) -> str:
                                               scripting=True,
                                               properties=["bootfs"],
                                               columns=["value"])
-    except RuntimeError as err:
+    except RuntimeError:
         raise
 
     bootfs = [i.split()[0] for i in bootfs_list.splitlines() if i.split()[0] != "-"]
@@ -80,6 +80,33 @@ def properties(dataset, appended_properties: Optional[list]) -> list:
     used_props = ["=".join(p) for p in dp if p[0] not in remove_props]
 
     used_props.extend(["=".join(pa) for pa in appended_properties])
+
+    # Make sure that the mountpoint is correct even if we are in a chroot environment.
+    # In this case, the ZFS pool is mounted with an alternative root (e.g. to `/mnt`).
+    rpool = zedenv.lib.be.dataset_pool(dataset)
+    altroot = None
+    try:
+        altroot = pyzfscmds.cmd.zpool_get(
+            rpool, columns=["value"], properties=["altroot"])
+    except RuntimeError:
+        ZELogger.log({
+            "level": "EXCEPTION",
+            "message": f"Failed to get properties of '{dataset}'"
+        }, exit_on_error=True)
+
+    if altroot != '-':
+        # Search and remove the alternative root at the beginning of the mountpoint
+        for i, p in enumerate(used_props):
+            prop, val = p.split("=")
+            if prop != "mountpoint":
+                continue
+
+            alt_len, mp_len = len(altroot), len(val)
+            if (mp_len >= alt_len) and (val[:alt_len] == altroot):
+                mountpoint = "mountpoint=/"
+                if mp_len != alt_len:
+                    mountpoint = mountpoint + val[alt_len:]
+                used_props[i] = mountpoint
 
     return used_props
 
@@ -132,6 +159,11 @@ def root(mount_dataset: str = "/") -> Optional[str]:
         return None
 
     return zfs_utility.dataset_parent(mountpoint_dataset)
+
+
+def extra_bpool() -> bool:
+    be_root = zedenv.lib.be.root('/boot')
+    return be_root is not None and (be_root != zedenv.lib.be.root())
 
 
 def mount_pool(mount_dataset: str = "/") -> Optional[str]:

@@ -1,6 +1,7 @@
 """List boot environments cli"""
 import errno
 import sys
+import re
 
 from typing import Optional
 
@@ -22,7 +23,7 @@ def get_clones(root_dataset: str,
 
     clone_data = []
     list_dataset = None  # Dataset we are listing clones under
-
+    snap_suffix = None
     if existing:
         existing_dataset = f"{parent_dataset}/{existing}"
         if zfs_utility.is_snapshot(existing_dataset):
@@ -45,14 +46,13 @@ def get_clones(root_dataset: str,
     clones = None
     try:
         clones = pyzfscmds.cmd.zfs_list(list_dataset, recursive=True, columns=["name"])
-    except RuntimeError as e:
+    except RuntimeError:
         ZELogger.log({
             "level": "EXCEPTION",
             "message": f"Failed to list datasets under {root_dataset}."
         }, exit_on_error=True)
 
     for c in [line for line in clones.splitlines()]:
-
         if zfs_utility.dataset_exists(f"{c}@{snap_suffix}", zfs_type="snapshot"):
             if c == list_dataset:
                 child = ""
@@ -109,7 +109,7 @@ def zedenv_create(parent_dataset: str,
     # Remove the final part of the data set after the last / and add new name
     boot_environment_dataset = f"{parent_dataset}/{boot_environment}"
 
-    zpool = zedenv.lib.be.dataset_pool(boot_environment_dataset)
+    zpool = zedenv.lib.be.dataset_pool(root_dataset)
     current_be = None
     try:
         current_be = pyzfscmds.utility.dataset_child_name(
@@ -137,7 +137,7 @@ def zedenv_create(parent_dataset: str,
             "message": f"Failed to create {boot_environment_dataset}, already exists."
         }, exit_on_error=True)
 
-    # Getting snapshot for clone
+    # Getting snapshot for root clone
     clone_sources = get_clones(root_dataset, existing)
     ZELogger.verbose_log({
         "level": "INFO",
@@ -152,12 +152,40 @@ def zedenv_create(parent_dataset: str,
 
         try:
             pyzfscmds.cmd.zfs_clone(source['snapshot'], be_clone, properties=source['properties'])
-        except RuntimeError as e:
+        except RuntimeError:
             ZELogger.log({
                 "level": "EXCEPTION",
                 "message": (f"Failed to create {boot_environment_dataset}",
-                            f" from {clone_sources['snapshot']}")
+                            f" from {source['snapshot']}")
             }, exit_on_error=True)
+
+    # Clone the dataset for the kernel and ramdisk files if a separate ZFS boot pool is used
+    if zedenv.lib.be.extra_bpool():
+        boot_dataset = pyzfscmds.system.agnostic.mountpoint_dataset('/boot')
+        clone_sources = get_clones(boot_dataset, existing)
+        ZELogger.verbose_log({
+            "level": "INFO",
+            "message": f"Getting properties of {boot_dataset} for clones {clone_sources}\n"
+        }, verbose)
+
+        for source in clone_sources:
+            m = re.search(r"(.*)/zedenv-", boot_dataset)
+            if m:
+                boot_clone = f"{m.group(1)}/zedenv-{boot_environment}"
+                try:
+                    pyzfscmds.cmd.zfs_clone(
+                        source['snapshot'], boot_clone, properties=source['properties'])
+                except RuntimeError:
+                    ZELogger.log({
+                        "level": "EXCEPTION",
+                        "message": (f"Failed to create {boot_clone}",
+                                    f" from {source['snapshot']}")
+                    }, exit_on_error=True)
+            else:
+                ZELogger.log({
+                    "level": "EXCEPTION",
+                    "message": f"Failed to determine a valid path from '{boot_dataset}'"
+                }, exit_on_error=True)
 
     if bootloader_plugin:
         try:

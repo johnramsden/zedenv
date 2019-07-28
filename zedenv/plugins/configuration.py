@@ -54,8 +54,11 @@ class Plugin(object):
                 "level": "INFO",
                 "message": f"Checking prop: 'org.zedenv.{self.bootloader}:{prop}'"
             }, self.verbose)
+
+            # Use the properties from the old boot environment
+            # as we can not be sure if the new boot environment exists at this point.
             prop_val = zedenv.lib.be.get_property(
-                "/".join([self.be_root, self.boot_environment]),
+                "/".join([self.be_root, self.old_boot_environment]),
                 f"org.zedenv.{self.bootloader}:{prop}")
 
             if prop_val is not None and prop_val != "-":
