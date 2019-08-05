@@ -179,6 +179,7 @@ def destroy_element(target: str,
                     verbose: Optional[bool],
                     noconfirm: Optional[bool],
                     noop: Optional[bool]):
+    pool = zedenv.lib.be.dataset_pool(dataset)
     if is_snapshot:
         if not noop:
             try:
@@ -201,7 +202,6 @@ def destroy_element(target: str,
             }, verbose)
 
             # Get and promote snapshots
-            pool = zedenv.lib.be.dataset_pool(dataset)
             promote_snaps = get_promote_snapshots(pool, dataset)
 
             for ds in promote_snaps:
