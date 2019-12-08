@@ -94,7 +94,7 @@ def properties(dataset, appended_properties: Optional[list]) -> list:
             "message": f"Failed to get properties of '{dataset}'"
         }, exit_on_error=True)
 
-    if altroot != '-':
+    if altroot.strip() != '-':
         # Search and remove the alternative root at the beginning of the mountpoint
         for i, p in enumerate(used_props):
             prop, val = p.split("=")
