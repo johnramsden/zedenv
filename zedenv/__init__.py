@@ -2,7 +2,7 @@
 
 import subprocess
 
-__version__ = '0.3.7'
+__version__ = '0.3.8'
 
 
 def vcs_release(version: str):

@@ -15,10 +15,6 @@ dev_require = [
     'Sphinx'
 ]
 
-dependency_links = [
-    'git+https://github.com/johnramsden/pyzfscmds#egg=pyzfscmds'
-]
-
 
 def readme():
     with open('README.rst') as f:
@@ -48,7 +44,6 @@ setup(
         'pyzfscmds @ git+https://github.com/johnramsden/pyzfscmds.git@v0.1.5-beta'
     ],
     setup_requires=['pytest-runner'],
-    dependency_links=dependency_links,
     tests_require=tests_require,
     extras_require={
         'test': tests_require,
