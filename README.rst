@@ -2,6 +2,8 @@
 zedenv
 ======
 
+**Future development has been moved to** `zectl <https://github.com/johnramsden/zectl>`_
+
 .. image:: https://travis-ci.com/johnramsden/zedenv.svg
     :target: https://travis-ci.com/johnramsden/zedenv
 
